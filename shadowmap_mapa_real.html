@@ -7,100 +7,48 @@
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <style>
-/* ── Tokens de color por tema ────────────────────────────────────────────── */
-:root, [data-theme="dark"] {
-  --bg:       #0f1420;
-  --panel:    #1a1f2e;
-  --surface:  #2a3040;
-  --border:   #3a4050;
-  --text:     #e0e0e0;
-  --muted:    #888;
-  --dim:      #555;
-  --dimmer:   #444;
-  --map-style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
-  --bld-color0: #1e4030;
-  --bld-color1: #2d6a42;
-  --bld-color2: #45a060;
-  --footprint-fill:   rgba(232,125,13,0.07);
-  --footprint-stroke: rgba(232,125,13,0.70);
-  --shadow-color:     rgba(80,130,255,VAR_OPACITY);
-  --popup-bg:   #1a1f2e;
-  --popup-bdr:  #3a4050;
-  --popup-txt:  #e0e0e0;
-  --popup-sub:  #aaa;
-  --popup-src:  #6ee7a8;
-  --strip-night:  rgba(10,15,40,0.50);
-  --strip-day:    rgba(255,180,50,0.06);
+:root,[data-theme="dark"]{
+  --bg:#0f1420;--panel:#1a1f2e;--surface:#2a3040;--border:#3a4050;
+  --text:#e0e0e0;--muted:#888;--dim:#555;
 }
-[data-theme="light"] {
-  --bg:       #f0f2f5;
-  --panel:    #ffffff;
-  --surface:  #f7f9fb;
-  --border:   #dde2ea;
-  --text:     #0f1420;
-  --muted:    #888;
-  --dim:      #aaa;
-  --dimmer:   #bbb;
-  --bld-color0: #c0dfc8;
-  --bld-color1: #3a8850;
-  --bld-color2: #1a5830;
-  --footprint-fill:   rgba(232,125,13,0.06);
-  --footprint-stroke: rgba(180,90,0,0.70);
-  --shadow-color:     rgba(20,50,160,VAR_OPACITY);
-  --popup-bg:   #ffffff;
-  --popup-bdr:  #dde2ea;
-  --popup-txt:  #0f1420;
-  --popup-sub:  #666;
-  --popup-src:  #1a8040;
-  --strip-night:  rgba(20,30,80,0.09);
-  --strip-day:    rgba(255,200,70,0.07);
+[data-theme="light"]{
+  --bg:#f0f2f5;--panel:#ffffff;--surface:#f7f9fb;--border:#dde2ea;
+  --text:#0f1420;--muted:#888;--dim:#aaa;
 }
-
-/* ── Reset + layout ──────────────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;font-family:'Helvetica Neue',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;transition:background 0.3s,color 0.3s;}
+html,body{height:100%;font-family:'Helvetica Neue',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;transition:background .3s,color .3s;}
 #app{display:grid;grid-template-columns:268px 1fr;height:100vh;}
 @media(max-width:768px){
   #app{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;}
-  #panel{border-right:none;border-bottom:0.5px solid var(--border);max-height:38vh;grid-column:1;grid-row:3;}
+  #panel{border-right:none;border-bottom:0.5px solid var(--border);max-height:40vh;grid-column:1;grid-row:3;}
   #mapwrap{grid-column:1;grid-row:2;}
 }
-
-/* ── Panel ───────────────────────────────────────────────────────────────── */
-#panel{background:var(--panel);border-right:0.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden;z-index:10;transition:background 0.3s;}
+#panel{background:var(--panel);border-right:0.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden;z-index:10;transition:background .3s;}
 #pscroll{overflow-y:auto;flex:1;padding:14px 12px;}
 #pscroll::-webkit-scrollbar{width:2px;}
 #pscroll::-webkit-scrollbar-thumb{background:var(--border);}
-
 .logo{font-size:15px;font-weight:700;color:var(--text);margin-bottom:1px;}
 .logo span{color:#e87d0d;}
 .subloc{font-size:10px;color:var(--muted);margin-bottom:14px;}
 .lbl{font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--dim);margin:0 0 5px;}
-
-/* time */
 #tbig{font-size:32px;font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:-1px;color:var(--text);line-height:1;margin-bottom:2px;}
 #sunst{font-size:10px;color:var(--muted);margin-bottom:9px;min-height:13px;}
 input[type=range]{width:100%;-webkit-appearance:none;height:2px;border-radius:2px;background:var(--surface);outline:none;margin-bottom:2px;cursor:pointer;}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#e87d0d;cursor:pointer;}
 #wsc{display:block;width:100%;height:10px;border-radius:2px;margin-bottom:3px;}
 .stlbls{display:flex;justify-content:space-between;font-size:9px;color:var(--dim);margin-bottom:12px;}
-
 input[type=date]{width:100%;background:var(--surface);border:0.5px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px;margin-bottom:10px;cursor:pointer;}
-[data-theme="dark"] input[type=date]::-webkit-calendar-picker-indicator{filter:invert(0.5);opacity:0.6;}
-
+[data-theme="dark"] input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);opacity:.6;}
 .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:10px;}
-.sbtn{background:var(--surface);border:0.5px solid var(--border);border-radius:5px;padding:5px 4px;font-size:10px;color:var(--muted);cursor:pointer;text-align:center;line-height:1.3;transition:background 0.1s;}
+.sbtn{background:var(--surface);border:0.5px solid var(--border);border-radius:5px;padding:5px 4px;font-size:10px;color:var(--muted);cursor:pointer;text-align:center;line-height:1.3;}
 .sbtn:hover{background:var(--border);}
-
 .sgrid4{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:10px;}
 .sc{background:var(--surface);border-radius:6px;padding:6px 8px;border:0.5px solid var(--border);}
 .sc-l{font-size:9px;color:var(--dim);margin-bottom:1px;}
 .sc-v{font-size:12px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;}
-
-/* badge */
-#src-badge{display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:6px;margin-bottom:10px;font-size:10px;background:var(--surface);border:0.5px solid var(--border);transition:all 0.3s;}
-#src-badge.ok{background:rgba(46,160,90,0.12);border-color:rgba(46,160,90,0.35);}
-#src-badge.err{background:rgba(200,50,50,0.12);border-color:rgba(200,50,50,0.35);}
+#src-badge{display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:6px;margin-bottom:10px;font-size:10px;background:var(--surface);border:0.5px solid var(--border);transition:all .3s;}
+#src-badge.ok{background:rgba(46,160,90,.12);border-color:rgba(46,160,90,.35);}
+#src-badge.err{background:rgba(200,50,50,.12);border-color:rgba(200,50,50,.35);}
 .sb-dot{width:6px;height:6px;border-radius:50%;background:var(--dim);flex-shrink:0;}
 #src-badge.ok .sb-dot{background:#2ea05a;}
 #src-badge.err .sb-dot{background:#c03030;}
@@ -110,11 +58,8 @@ input[type=date]{width:100%;background:var(--surface);border:0.5px solid var(--b
 #src-badge.err .sb-text{color:#c03030;}
 .sb-n{font-family:monospace;font-size:9px;color:var(--dim);}
 #src-badge.ok .sb-n{color:#2ea05a;}
-
-/* banners */
 #nightbanner{display:none;background:#1a2340;border-radius:7px;padding:10px;margin-bottom:10px;border:0.5px solid #263057;}
-.nb-icon{font-size:18px;margin-bottom:4px;}
-.nb-title{font-size:11px;font-weight:600;color:#a0b8e8;margin-bottom:2px;}
+.nb-icon{font-size:18px;margin-bottom:4px;}.nb-title{font-size:11px;font-weight:600;color:#a0b8e8;margin-bottom:2px;}
 .nb-sub{font-size:9px;color:#6070a0;line-height:1.4;}
 .nb-times{display:flex;gap:6px;margin-top:6px;}
 .nb-t{flex:1;background:#243060;border-radius:4px;padding:4px 6px;text-align:center;}
@@ -123,18 +68,14 @@ input[type=date]{width:100%;background:var(--surface);border:0.5px solid var(--b
 #twibanner{display:none;background:#2a1a0a;border-radius:6px;padding:8px 10px;margin-bottom:10px;border:0.5px solid #5a3010;}
 #twibanner p:first-child{font-size:10px;font-weight:600;color:#e8a060;margin-bottom:2px;}
 #twibanner p:last-child{font-size:9px;color:#a06030;line-height:1.3;}
-
-/* UV */
-#uvcard{border-radius:6px;padding:9px;margin-bottom:10px;border:0.5px solid var(--border);background:var(--surface);transition:background 0.3s,border-color 0.3s;}
+#uvcard{border-radius:6px;padding:9px;margin-bottom:10px;border:0.5px solid var(--border);background:var(--surface);transition:background .3s,border-color .3s;}
 .uvrow{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
 #uvnum{font-size:26px;font-weight:300;font-variant-numeric:tabular-nums;color:var(--text);line-height:1;}
 #uvbadge{font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;display:inline-block;margin-bottom:2px;background:var(--border);color:var(--muted);}
 #uvspf{font-size:9px;color:var(--dim);}
 .uvbar{height:3px;border-radius:2px;background:linear-gradient(to right,#1D9E75,#EF9F27,#D85A30,#E24B4A,#7F77DD);position:relative;margin-bottom:4px;}
-#uvcur{position:absolute;top:-5px;width:2px;height:13px;border-radius:1px;background:var(--text);transform:translateX(-50%);left:0%;transition:left 0.3s;}
+#uvcur{position:absolute;top:-5px;width:2px;height:13px;border-radius:1px;background:var(--text);transform:translateX(-50%);left:0%;transition:left .3s;}
 #uvtip{font-size:9px;color:var(--muted);line-height:1.4;}
-
-/* weather */
 #wxcard{background:var(--surface);border:0.5px solid var(--border);border-radius:6px;padding:8px;margin-bottom:10px;}
 .wxrow{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
 #wxicon{font-size:18px;line-height:1;}
@@ -143,66 +84,50 @@ input[type=date]{width:100%;background:var(--surface);border:0.5px solid var(--b
 .wxg{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
 .wx-l{font-size:9px;color:var(--dim);margin-bottom:1px;}
 .wx-v{font-size:11px;font-weight:500;color:var(--text);}
-
-/* forecast */
 #fcast{margin-bottom:10px;}
 .frow{display:flex;align-items:center;gap:6px;padding:3px 2px;border-radius:3px;cursor:pointer;font-size:10px;color:var(--muted);}
 .frow:hover{background:var(--surface);}
-.fi{font-size:12px;width:16px;text-align:center;}
-.fn{width:22px;color:var(--dim);}
-.fd{flex:1;}
-.fc{font-family:monospace;font-size:9px;color:var(--border);}
-
-/* search */
+.fi{font-size:12px;width:16px;text-align:center;}.fn{width:22px;color:var(--dim);}.fd{flex:1;}.fc{font-family:monospace;font-size:9px;color:var(--border);}
 #swrap{padding:8px 12px;border-top:0.5px solid var(--surface);}
 #srch{width:100%;background:var(--surface);border:0.5px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:11px;}
 #srch::placeholder{color:var(--dim);}
-#srch:focus{outline:none;border-color:rgba(232,125,13,0.45);}
-#sres{background:var(--panel);border:0.5px solid var(--border);border-radius:6px;margin-top:3px;overflow:hidden;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.3);}
+#srch:focus{outline:none;border-color:rgba(232,125,13,.45);}
+#sres{background:var(--panel);border:0.5px solid var(--border);border-radius:6px;margin-top:3px;overflow:hidden;display:none;box-shadow:0 4px 12px rgba(0,0,0,.3);}
 .sresrow{padding:6px 10px;font-size:11px;cursor:pointer;color:var(--muted);border-bottom:0.5px solid var(--surface);}
 .sresrow:hover{background:var(--surface);}
 .sresrow:last-child{border-bottom:none;}
 #dsrc{font-size:9px;color:var(--border);padding:4px 12px;text-align:right;}
-
-/* ── Map area ─────────────────────────────────────────────────────────────── */
 #mapwrap{position:relative;overflow:hidden;}
 #map{position:absolute;inset:0;}
 #shcanvas{position:absolute;inset:0;pointer-events:none;z-index:2;will-change:contents;}
-#mapnight{position:absolute;inset:0;background:rgba(8,12,28,0.75);z-index:4;display:none;pointer-events:none;}
+#mapnight{position:absolute;inset:0;background:rgba(8,12,28,.75);z-index:4;display:none;pointer-events:none;}
 #mapnight-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
-.mn-icon{font-size:36px;margin-bottom:7px;opacity:0.6;}
-.mn-title{font-size:15px;font-weight:300;color:rgba(180,200,255,0.75);margin-bottom:4px;}
-.mn-sub{font-size:11px;color:rgba(110,140,210,0.55);}
-#maptwi{position:absolute;inset:0;background:rgba(70,25,0,0.18);z-index:3;display:none;pointer-events:none;}
-
-/* toolbar */
-#toolbar{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;gap:2px;background:rgba(0,0,0,0.0);border-radius:7px;padding:3px;z-index:6;}
-#toolbar-inner{display:flex;gap:2px;background:var(--panel);border:0.5px solid var(--border);border-radius:7px;padding:3px;box-shadow:0 2px 8px rgba(0,0,0,0.25);}
-.tb{padding:5px 11px;border-radius:4px;font-size:10px;cursor:pointer;border:none;background:transparent;color:var(--dim);transition:all 0.12s;}
-.tb.on2d{background:rgba(232,125,13,0.18);color:#e87d0d;}
-.tb.on3d{background:rgba(50,120,200,0.18);color:#5090e0;}
-/* theme toggle button */
-#theme-btn{padding:5px 8px;border-radius:4px;font-size:13px;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all 0.12s;line-height:1;}
+.mn-icon{font-size:36px;margin-bottom:7px;opacity:.6;}
+.mn-title{font-size:15px;font-weight:300;color:rgba(180,200,255,.75);margin-bottom:4px;}
+.mn-sub{font-size:11px;color:rgba(110,140,210,.55);}
+#maptwi{position:absolute;inset:0;background:rgba(70,25,0,.18);z-index:3;display:none;pointer-events:none;}
+#toolbar{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:6;}
+#toolbar-inner{display:flex;gap:2px;background:var(--panel);border:0.5px solid var(--border);border-radius:7px;padding:3px;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+.tb{padding:5px 11px;border-radius:4px;font-size:10px;cursor:pointer;border:none;background:transparent;color:var(--dim);transition:all .12s;}
+.tb.on2d{background:rgba(232,125,13,.18);color:#e87d0d;}
+.tb.on3d{background:rgba(50,120,200,.18);color:#5090e0;}
+#theme-btn{padding:5px 8px;border-radius:4px;font-size:13px;cursor:pointer;border:none;background:transparent;color:var(--muted);line-height:1;}
 #theme-btn:hover{background:var(--surface);}
-
 #compass{position:absolute;top:50px;right:10px;width:50px;height:50px;background:var(--panel);border:0.5px solid var(--border);border-radius:50%;z-index:5;display:none;}
 #compass svg{position:absolute;inset:0;}
-#camhint{position:absolute;top:10px;left:10px;background:var(--panel);border:0.5px solid var(--border);border-radius:6px;padding:5px 8px;z-index:5;font-size:9px;color:var(--muted);line-height:1.5;display:none;opacity:0.9;}
+#camhint{position:absolute;top:10px;left:10px;background:var(--panel);border:0.5px solid var(--border);border-radius:6px;padding:5px 8px;z-index:5;font-size:9px;color:var(--muted);line-height:1.5;display:none;opacity:.9;}
 #leg{position:absolute;bottom:26px;right:10px;background:var(--panel);border:0.5px solid var(--border);border-radius:6px;padding:6px 9px;z-index:5;font-size:9px;color:var(--muted);}
 #leg div{display:flex;align-items:center;gap:4px;margin-bottom:2px;}
 #leg div:last-child{margin-bottom:0;}
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-#statusbar{position:absolute;bottom:0;left:0;right:0;background:var(--panel);border-top:0.5px solid var(--border);padding:3px 10px;z-index:5;font-size:9px;color:var(--dim);opacity:0.9;}
+#statusbar{position:absolute;bottom:0;left:0;right:0;background:var(--panel);border-top:0.5px solid var(--border);padding:3px 10px;z-index:5;font-size:9px;color:var(--dim);opacity:.9;}
 #lodbar{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);background:var(--panel);border:0.5px solid var(--border);border-radius:18px;padding:5px 12px;z-index:5;font-size:10px;color:var(--muted);display:none;white-space:nowrap;}
-
-/* popup */
-.h-popup{background:var(--popup-bg);border:0.5px solid var(--popup-bdr);border-radius:7px;padding:9px 11px;font-size:11px;min-width:140px;}
-.h-popup strong{display:block;font-size:12px;font-weight:700;color:var(--popup-txt);margin-bottom:4px;}
-.h-popup .hp-row{display:flex;justify-content:space-between;color:var(--popup-sub);margin-bottom:2px;gap:10px;}
-.h-popup .hp-src{font-size:9px;margin-top:4px;padding-top:4px;border-top:0.5px solid var(--surface);color:var(--popup-src);font-weight:500;}
+.h-popup{background:var(--panel);border:0.5px solid var(--border);border-radius:7px;padding:9px 11px;font-size:11px;min-width:140px;}
+.h-popup strong{display:block;font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.h-popup .hp-row{display:flex;justify-content:space-between;color:var(--muted);margin-bottom:2px;gap:10px;}
+.h-popup .hp-src{font-size:9px;margin-top:4px;padding-top:4px;border-top:0.5px solid var(--surface);color:#2ea05a;font-weight:500;}
+[data-theme="dark"] .h-popup .hp-src{color:#6ee7a8;}
 .maplibregl-popup-content{padding:0!important;border-radius:7px!important;box-shadow:none!important;}
-[data-theme="dark"] .maplibregl-popup-tip{border-top-color:#1a1f2e!important;}
-[data-theme="light"] .maplibregl-popup-tip{border-top-color:#fff!important;}
 </style>
 </head>
 <body>
@@ -217,7 +142,6 @@ input[type=date]{width:100%;background:var(--surface);border:0.5px solid var(--b
     <input type="range" min="0" max="1439" value="720" id="tsl">
     <canvas id="wsc" height="10"></canvas>
     <div class="stlbls"><span id="srlbl">Amanecer</span><span id="sslbl">Atardecer</span></div>
-
     <div id="nightbanner">
       <div class="nb-icon">🌙</div>
       <div class="nb-title">Noche — sin luz solar directa</div>
@@ -228,17 +152,14 @@ input[type=date]{width:100%;background:var(--surface);border:0.5px solid var(--b
       </div>
     </div>
     <div id="twibanner"><p>🌅 Crepúsculo — sombras muy largas</p><p>Sol a menos de 4°, sombras limitadas a 300 m.</p></div>
-
     <p class="lbl">Fuente de alturas</p>
     <div id="src-badge">
       <div class="sb-dot" id="sb-dot"></div>
       <div class="sb-text" id="sb-text">Cargando…</div>
       <div class="sb-n" id="sb-n"></div>
     </div>
-
     <p class="lbl">Fecha</p>
     <input type="date" id="din">
-
     <p class="lbl">Estación rápida</p>
     <div class="sgrid">
       <button class="sbtn" onclick="setSeas(11,21)">Solsticio<br>invierno</button>
@@ -246,7 +167,6 @@ input[type=date]{width:100%;background:var(--surface);border:0.5px solid var(--b
       <button class="sbtn" onclick="setSeas(5,21)">Solsticio<br>verano</button>
       <button class="sbtn" onclick="setSeas(8,22)">Equinoccio<br>otoño</button>
     </div>
-
     <p class="lbl">Posición solar</p>
     <div class="sgrid4">
       <div class="sc"><div class="sc-l">Azimut</div><div class="sc-v" id="staz">—</div></div>
@@ -254,23 +174,20 @@ input[type=date]{width:100%;background:var(--surface);border:0.5px solid var(--b
       <div class="sc"><div class="sc-l">Amanecer</div><div class="sc-v" id="stsr">—</div></div>
       <div class="sc"><div class="sc-l">Atardecer</div><div class="sc-v" id="stss">—</div></div>
     </div>
-
     <p class="lbl">Índice UV & Protección</p>
     <div id="uvcard">
       <div class="uvrow"><div id="uvnum">--</div><div><div id="uvbadge">--</div><div id="uvspf">--</div></div></div>
       <div class="uvbar"><div id="uvcur"></div></div>
       <p id="uvtip">Cargando datos meteorológicos…</p>
     </div>
-
     <p class="lbl">Tiempo actual</p>
     <div id="wxcard">
       <div class="wxrow"><span id="wxicon">--</span><div><div id="wxdesc">Cargando…</div><div id="wxsub">--</div></div></div>
       <div class="wxg">
-        <div><p class="wx-l">Nubes</p><p class="wx-v" id="wx-c">--%</p></div>
-        <div><p class="wx-l">Precip.</p><p class="wx-v" id="wx-p">-- mm</p></div>
+        <div><p class="wx-l">Nubes</p><p class="wx-v" id="wx-nubes">--%</p></div>
+        <div><p class="wx-l">Precip.</p><p class="wx-v" id="wx-prec">-- mm</p></div>
       </div>
     </div>
-
     <p class="lbl">Previsión 7 días</p>
     <div id="fcast"></div>
   </div>
@@ -280,7 +197,6 @@ input[type=date]{width:100%;background:var(--surface);border:0.5px solid var(--b
   </div>
   <div id="dsrc">Alturas: Ayto. Madrid dic.2025 · Clima: Open-Meteo</div>
 </div>
-
 <div id="mapwrap">
   <div id="map"></div>
   <canvas id="shcanvas"></canvas>
@@ -293,7 +209,6 @@ input[type=date]{width:100%;background:var(--surface);border:0.5px solid var(--b
     </div>
   </div>
   <div id="lodbar">Acerca para ver edificios en 3D (zoom 16+)</div>
-
   <div id="toolbar">
     <div id="toolbar-inner">
       <button class="tb on2d" id="btn2d" onclick="setMode('2d')">2D</button>
@@ -302,7 +217,6 @@ input[type=date]{width:100%;background:var(--surface);border:0.5px solid var(--b
       <button id="theme-btn" onclick="toggleTheme()" title="Modo claro/oscuro">☀️</button>
     </div>
   </div>
-
   <div id="camhint">🖱 Ctrl+arrastrar: rotar/inclinar</div>
   <div id="compass">
     <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
@@ -316,47 +230,34 @@ input[type=date]{width:100%;background:var(--surface);border:0.5px solid var(--b
       <line id="sray" x1="25" y1="25" x2="25" y2="11" stroke="#e87d0d" stroke-width="0.8" opacity="0"/>
     </svg>
   </div>
-
   <div id="leg">
-    <div><div class="dot" style="background:rgba(232,125,13,0.2);border:1px solid rgba(232,125,13,0.7);"></div> Huella edificio</div>
-    <div id="leg-shadow"><div class="dot" style="background:rgba(80,130,255,0.55);border:0.5px solid rgba(80,130,255,0.3);"></div> Sombra proyectada</div>
+    <div><div class="dot" style="background:rgba(232,125,13,.2);border:1px solid rgba(232,125,13,.7);"></div> Huella edificio</div>
+    <div><div class="dot" style="background:rgba(80,130,255,.55);"></div> Sombra proyectada</div>
     <div><div class="dot" style="background:#2d6a42;"></div> Edificio 3D</div>
     <div style="margin-top:3px;padding-top:3px;border-top:0.5px solid var(--surface);font-size:8px;color:var(--dim);">Ayto. Madrid · dic. 2025</div>
   </div>
   <div id="statusbar">Iniciando…</div>
 </div>
 </div>
-
 <script>
-// ── CONFIG ────────────────────────────────────────────────────────────────────
-// Cambia esta URL a tu GitHub Pages:
+// ── CONFIG ──────────────────────────────────────────────────────────────────
 const DATA_BASE_URL = 'https://releos.github.io/sombras/';
 
 const RP=Math.PI/180;
 const rd=a=>a*RP, dg=a=>a/RP;
 const CENTER=[40.4168,-3.7038];
 const MAX_SH=300, LOD_ZOOM=16, TILE_DEG=0.004;
+const SHADOW_MAX_ZOOM=18.5; // beyond this zoom shadows are hidden (prevents covering camera)
 const IS_MOBILE=navigator.maxTouchPoints>0||/Android|iPhone/i.test(navigator.userAgent);
-const DPR=Math.min(devicePixelRatio||1, IS_MOBILE?1.5:2);
+const DPR=Math.min(devicePixelRatio||1,IS_MOBILE?1.5:2);
 const THROTTLE=IS_MOBILE?80:32;
 
-// Map style per theme
 const MAP_STYLES={
-  dark: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+  dark:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
   light:'https://tiles.openfreemap.org/styles/liberty'
 };
 
-// Shadow color per theme
-const SHADOW_RGBA={
-  dark:  (o)=>`rgba(80,130,255,${o})`,
-  light: (o)=>`rgba(20,50,160,${o})`
-};
-const FOOTPRINT_STROKE={
-  dark:  'rgba(232,125,13,0.70)',
-  light: 'rgba(180,90,0,0.70)'
-};
-
-// ── STATE ─────────────────────────────────────────────────────────────────────
+// ── STATE ───────────────────────────────────────────────────────────────────
 let MAP_LAT=CENTER[0], MAP_LON=CENTER[1];
 let curDate=new Date(), curMins=720, mode='2d';
 let theme=localStorage.getItem('smtheme')||'dark';
@@ -368,21 +269,25 @@ let shadowDirty=true, renderPending=false, lastRender=0;
 let wLoaded=false, hCloud=[], hCode=[], hPrec=[], hUV=[], wDates=[], dData={};
 let fetchTmr=null;
 
-// ── CANVAS ────────────────────────────────────────────────────────────────────
+// ── CANVAS + OFFSCREEN ──────────────────────────────────────────────────────
 const shCanvas=document.getElementById('shcanvas');
 const shCtx=shCanvas.getContext('2d',{alpha:true,desynchronized:true});
+// Offscreen canvas for shadow compositing — all shadows drawn here first,
+// then blitted once. This makes overlapping shadows the SAME flat color.
+const offCanvas=document.createElement('canvas');
+const offCtx=offCanvas.getContext('2d',{alpha:true});
 
 function resizeCanvas(){
   const r=document.getElementById('mapwrap').getBoundingClientRect();
-  shCanvas.width=Math.round(r.width*DPR);
-  shCanvas.height=Math.round(r.height*DPR);
-  shCanvas.style.width=r.width+'px';
-  shCanvas.style.height=r.height+'px';
+  const w=Math.round(r.width*DPR), h=Math.round(r.height*DPR);
+  shCanvas.width=w; shCanvas.height=h;
+  shCanvas.style.width=r.width+'px'; shCanvas.style.height=r.height+'px';
+  offCanvas.width=w; offCanvas.height=h;
   shadowDirty=true;
 }
 window.addEventListener('resize',()=>{resizeCanvas();scheduleRender();});
 
-// ── RENDER ────────────────────────────────────────────────────────────────────
+// ── RENDER ──────────────────────────────────────────────────────────────────
 function scheduleRender(){
   if(renderPending)return;
   renderPending=true;
@@ -399,38 +304,41 @@ function doRender(){
 function renderCanvas(){
   const W=shCanvas.width, H=shCanvas.height;
   shCtx.clearRect(0,0,W,H);
+  offCtx.clearRect(0,0,W,H);
   if(!mapReady||!visibleGroups.length)return;
 
   const p=sunPos(curMins,MAP_LAT,MAP_LON);
   const isDay=p.el>0.5;
+  const zoom=map.getZoom();
+
+  // Shadows hidden when too zoomed in to prevent "inside shadow" effect
+  const shadowsVisible=isDay&&zoom<=SHADOW_MAX_ZOOM;
+
   const cloud=getCurCloud();
   const shOpacity=cloud!==null?Math.max(0.06,0.52*(1-cloud/100*0.80)):0.52;
 
+  // Shadow direction
   const cosLat=Math.cos(rd(MAP_LAT));
   const mPDLat=111000, mPDLon=111000*cosLat;
-  const lenPerM=isDay?Math.min(MAX_SH,1/Math.tan(rd(Math.max(p.el,0.5)))):0;
-  const uLat=isDay?-Math.cos(rd(p.az))*lenPerM/mPDLat:0;
-  const uLon=isDay?-Math.sin(rd(p.az))*lenPerM/mPDLon:0;
+  const lenPerM=shadowsVisible?Math.min(MAX_SH,1/Math.tan(rd(Math.max(p.el,0.5)))):0;
+  const uLat=shadowsVisible?-Math.cos(rd(p.az))*lenPerM/mPDLat:0;
+  const uLon=shadowsVisible?-Math.sin(rd(p.az))*lenPerM/mPDLon:0;
 
-  const zoom=map.getZoom();
   const strokeW=Math.max(0.5,Math.min(1.8,(zoom-13)*0.35))*DPR;
-
-  const shadowColor=SHADOW_RGBA[theme](shOpacity.toFixed(2));
-  const footprintStroke=FOOTPRINT_STROKE[theme];
-  const footprintFill=theme==='dark'?'rgba(232,125,13,0.06)':'rgba(232,125,13,0.05)';
+  const isDark=theme==='dark';
+  const footFill=isDark?'rgba(232,125,13,0.06)':'rgba(232,125,13,0.05)';
+  const footStroke=isDark?'rgba(232,125,13,0.70)':'rgba(180,90,0,0.70)';
+  // Shadow color on offscreen canvas — always opaque (composited with opacity later)
+  const shadowFlat=isDark?'rgba(80,130,255,1)':'rgba(20,50,160,1)';
 
   let shCount=0, footCount=0;
 
   for(const g of visibleGroups){
-    // Each group has polys:[{h, ring}] — render each ring individually
-    // This preserves actual building shapes (Torres Kio, etc.)
-    const polys=g.polys||[];
-
-    for(const poly of polys){
+    for(const poly of (g.polys||[])){
       const ring=poly.ring;
       if(!ring||ring.length<2)continue;
 
-      // ── Footprint (actual polygon shape, NOT hull) ──────────────────────
+      // ── Footprint (real polygon shape) ─────────────────────────────────
       shCtx.beginPath();
       const p0=map.project([ring[0][0],ring[0][1]]);
       shCtx.moveTo(p0.x*DPR,p0.y*DPR);
@@ -439,20 +347,18 @@ function renderCanvas(){
         shCtx.lineTo(pi.x*DPR,pi.y*DPR);
       }
       shCtx.closePath();
-      shCtx.fillStyle=footprintFill;
+      shCtx.fillStyle=footFill;
       shCtx.fill();
-      shCtx.strokeStyle=footprintStroke;
+      shCtx.strokeStyle=footStroke;
       shCtx.lineWidth=strokeW;
       shCtx.stroke();
       footCount++;
 
-      // ── Shadow per polygon (preserves shape, no inter-building merging) ─
-      if(!isDay)continue;
-
+      // ── Shadow on offscreen canvas ──────────────────────────────────────
+      if(!shadowsVisible)continue;
       const h=poly.h;
       const dLat=uLat*h, dLon=uLon*h;
 
-      // Screen-space points: ring + shifted ring → hull
       const pts=[];
       for(const[lon,lat]of ring){
         const a=map.project([lon,lat]);
@@ -464,24 +370,34 @@ function renderCanvas(){
       const sh=convexHull(pts);
       if(sh.length<3)continue;
 
-      shCtx.beginPath();
-      shCtx.moveTo(sh[0][0],sh[0][1]);
-      for(let i=1;i<sh.length;i++)shCtx.lineTo(sh[i][0],sh[i][1]);
-      shCtx.closePath();
-      shCtx.fillStyle=shadowColor;
-      shCtx.fill();
+      offCtx.beginPath();
+      offCtx.moveTo(sh[0][0],sh[0][1]);
+      for(let i=1;i<sh.length;i++)offCtx.lineTo(sh[i][0],sh[i][1]);
+      offCtx.closePath();
+      offCtx.fillStyle=shadowFlat;
+      offCtx.fill();
       shCount++;
     }
   }
 
+  // Blit offscreen shadows onto main canvas with flat opacity
+  // Because the offscreen is opaque-per-shadow but composited once here,
+  // overlapping shadows do NOT accumulate — they are always the same color.
+  if(shadowsVisible&&shCount>0){
+    shCtx.globalAlpha=shOpacity;
+    shCtx.drawImage(offCanvas,0,0);
+    shCtx.globalAlpha=1;
+  }
+
   const l10=isDay?Math.round(Math.min(MAX_SH,10/Math.tan(rd(Math.max(p.el,0.5))))):0;
   const eff=cloud!==null?Math.round((1-cloud/100)*100):100;
-  document.getElementById('statusbar').textContent=isDay
-    ?`${shCount} sombras · ${footCount} polígonos · elev. ${p.el.toFixed(1)}° · az. ${Math.round(p.az)}° · ~${l10}m/10m · sol ${eff}%`
-    :`${footCount} polígonos en vista · noche`;
+  document.getElementById('statusbar').textContent=
+    !isDay?`${footCount} polígonos en vista · noche`
+    :zoom>SHADOW_MAX_ZOOM?`${footCount} polígonos · demasiado cerca para proyectar sombras`
+    :`${shCount} sombras · ${footCount} polígonos · elev. ${p.el.toFixed(1)}° · az. ${Math.round(p.az)}° · ~${l10}m/10m · sol ${eff}%`;
 }
 
-// ── CONVEX HULL ───────────────────────────────────────────────────────────────
+// ── CONVEX HULL ─────────────────────────────────────────────────────────────
 function cross(O,A,B){return(A[0]-O[0])*(B[1]-O[1])-(A[1]-O[1])*(B[0]-O[0]);}
 function convexHull(pts){
   if(pts.length<3)return pts;
@@ -492,37 +408,28 @@ function convexHull(pts){
   lo.pop();hi.pop();return[...lo,...hi];
 }
 
-// ── THEME TOGGLE ─────────────────────────────────────────────────────────────
+// ── THEME ───────────────────────────────────────────────────────────────────
 function toggleTheme(){
   theme=theme==='dark'?'light':'dark';
   localStorage.setItem('smtheme',theme);
-  applyTheme();
-}
-function applyTheme(){
   document.documentElement.setAttribute('data-theme',theme);
   document.getElementById('theme-btn').textContent=theme==='dark'?'☀️':'🌙';
-  // Rebuild map with correct style
   if(mapReady){
-    rebuildMap();
+    const cen=map.getCenter(),z=map.getZoom(),b=map.getBearing(),pi=map.getPitch();
+    map.setStyle(MAP_STYLES[theme]);
+    map.once('style.load',()=>{
+      setupMapLayers();
+      map.jumpTo({center:cen,zoom:z,bearing:b,pitch:pi});
+      if(mode==='3d'){
+        try{map.setLayoutProperty('bld-3d','visibility','visible');}catch(e){}
+        push3DBuildings();
+      }
+      shadowDirty=true;scheduleRender();
+    });
   }
 }
 
-function rebuildMap(){
-  // Smoothly swap map style
-  const center=map.getCenter();
-  const zoom=map.getZoom();
-  const bearing=map.getBearing();
-  const pitch=map.getPitch();
-  map.setStyle(MAP_STYLES[theme]);
-  map.once('style.load',()=>{
-    setupMapLayers();
-    map.jumpTo({center,zoom,bearing,pitch});
-    push3DBuildings();
-    shadowDirty=true;scheduleRender();
-  });
-}
-
-// ── MAP INIT ──────────────────────────────────────────────────────────────────
+// ── MAP INIT ─────────────────────────────────────────────────────────────────
 function initMap(){
   map=new maplibregl.Map({
     container:'map',
@@ -534,7 +441,7 @@ function initMap(){
   });
   map.addControl(new maplibregl.NavigationControl({showCompass:true,visualizePitch:true}),'bottom-right');
   map.on('rotate',updateBearing);
-  map.on('zoom',checkLOD);
+  map.on('zoom',()=>{checkLOD();shadowDirty=true;scheduleRender();});
   map.on('move',()=>{shadowDirty=true;scheduleRender();});
   map.on('load',()=>{
     setupMapLayers();
@@ -555,7 +462,6 @@ function initMap(){
 }
 
 function setupMapLayers(){
-  // Hide base building layers
   for(const l of map.getStyle().layers){
     if((l.id||'').toLowerCase().includes('build')||(l['source-layer']||'').toLowerCase().includes('build')){
       try{map.setLayoutProperty(l.id,'visibility','none');}catch(e){}
@@ -564,7 +470,6 @@ function setupMapLayers(){
   let beforeId;
   for(const l of map.getStyle().layers){if(l.type==='symbol'){beforeId=l.id;break;}}
 
-  // 3D extrusion source
   if(!map.getSource('madrid-3d')){
     map.addSource('madrid-3d',{type:'geojson',data:{type:'FeatureCollection',features:[]},buffer:0,tolerance:0.3});
   }
@@ -594,21 +499,17 @@ function setupMapLayers(){
     map.on('mouseenter','bld-3d',()=>map.getCanvas().style.cursor='pointer');
     map.on('mouseleave','bld-3d',()=>map.getCanvas().style.cursor='');
   }
-  if(mode==='3d'){
-    try{map.setLayoutProperty('bld-3d','visibility','visible');}catch(e){}
-    push3DBuildings();
-  }
 }
 
-// ── TILE LOADING ──────────────────────────────────────────────────────────────
+// ── TILES ────────────────────────────────────────────────────────────────────
 function snapTile(v){return Math.floor(v/TILE_DEG)*TILE_DEG;}
 function tileKey(tx,ty){return`${tx.toFixed(4)}_${ty.toFixed(4)}`;}
 function tilesForBBox(w,s,e,n){
-  const tiles=[];
+  const t=[];
   for(let tx=snapTile(w);tx<e+TILE_DEG;tx=+(tx+TILE_DEG).toFixed(6))
     for(let ty=snapTile(s);ty<n+TILE_DEG;ty=+(ty+TILE_DEG).toFixed(6))
-      tiles.push({tx,ty,key:tileKey(tx,ty)});
-  return tiles;
+      t.push({tx,ty,key:tileKey(tx,ty)});
+  return t;
 }
 function scheduleViewportFetch(){clearTimeout(fetchTmr);fetchTmr=setTimeout(fetchViewport,400);}
 
@@ -634,7 +535,15 @@ async function fetchViewport(){
         anyNew=true;
       }catch{tileStatus.set(t.key,'error');}
     }));
-    if(anyNew){updateVisible();push3DBuildings();shadowDirty=true;scheduleRender();}
+    if(anyNew){
+      updateVisible();
+      // Push 3D buildings only if in 3D mode and map is ready
+      if(mode==='3d'&&mapReady){
+        try{map.setLayoutProperty('bld-3d','visibility','visible');}catch(e){}
+        push3DBuildings();
+      }
+      shadowDirty=true;scheduleRender();
+    }
   }
   const errs=[...tileStatus.values()].filter(v=>v==='error').length;
   const total=[...tileCache.values()].reduce((s,d)=>s+d.length,0);
@@ -651,16 +560,14 @@ function updateVisible(){
     for(const g of data){
       const[fx,fy]=g.hull[0];
       if(fx>=vW&&fx<=vE&&fy>=vS&&fy<=vN){groups.push(g);continue;}
-      let ok=false;
-      for(const[x,y]of g.hull){if(x>=vW&&x<=vE&&y>=vS&&y<=vN){ok=true;break;}}
-      if(ok)groups.push(g);
+      for(const[x,y]of g.hull){if(x>=vW&&x<=vE&&y>=vS&&y<=vN){groups.push(g);break;}}
     }
   }
   visibleGroups=groups;shadowDirty=true;
 }
 
 function push3DBuildings(){
-  if(!map?.getSource('madrid-3d')||mode!=='3d')return;
+  if(!mapReady||!map.getSource('madrid-3d'))return;
   const feats=[];
   for(const g of visibleGroups){
     for(const poly of (g.polys||[])){
@@ -668,7 +575,9 @@ function push3DBuildings(){
       feats.push({type:'Feature',geometry:{type:'Polygon',coordinates:[poly.ring]},properties:{h:poly.h}});
     }
   }
-  map.getSource('madrid-3d').setData({type:'FeatureCollection',features:feats});
+  try{
+    map.getSource('madrid-3d').setData({type:'FeatureCollection',features:feats});
+  }catch(e){}
 }
 
 function updateBadge(state,text,n){
@@ -677,7 +586,7 @@ function updateBadge(state,text,n){
   document.getElementById('sb-n').textContent=n||'';
 }
 
-// ── MODE / CAMERA ─────────────────────────────────────────────────────────────
+// ── MODE / CAMERA ────────────────────────────────────────────────────────────
 function setMode(m){
   mode=m;
   document.getElementById('btn2d').className='tb'+(m==='2d'?' on2d':'');
@@ -703,7 +612,7 @@ function checkLOD(){
   document.getElementById('lodbar').style.display=(mode==='3d'&&map.getZoom()<LOD_ZOOM)?'block':'none';
 }
 
-// ── COMPASS ───────────────────────────────────────────────────────────────────
+// ── COMPASS ──────────────────────────────────────────────────────────────────
 function updateBearing(){
   if(!map)return;
   const b=map.getBearing(),r=rd(b),R=14,cx=25,cy=25;
@@ -723,7 +632,7 @@ function updateCompassDot(az,el){
   ray.setAttribute('opacity','0.7');
 }
 
-// ── LIGHT ─────────────────────────────────────────────────────────────────────
+// ── LIGHT ────────────────────────────────────────────────────────────────────
 function applyLight(){
   if(!mapReady)return;
   const p=sunPos(curMins,MAP_LAT,MAP_LON);
@@ -736,7 +645,7 @@ function applyLight(){
   updateCompassDot(p.az,p.el);
 }
 
-// ── SOLAR MATH ────────────────────────────────────────────────────────────────
+// ── SOLAR MATH ───────────────────────────────────────────────────────────────
 function doy(d){return Math.floor((d-new Date(d.getFullYear(),0,0))/864e5);}
 function fmtH(h){h=((h%24)+24)%24;const hh=Math.floor(h),mm=Math.round((h-hh)*60);if(mm>=60)return String((hh+1)%24).padStart(2,'0')+':00';return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');}
 function fmtM(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
@@ -762,7 +671,7 @@ function sunTimes(lat,lon){
   return{sr:noonUTC-H0/15+tzH,ss:noonUTC+H0/15+tzH};
 }
 
-// ── DAY/NIGHT ─────────────────────────────────────────────────────────────────
+// ── DAY/NIGHT UI ─────────────────────────────────────────────────────────────
 function updateDayNightUI(){
   const p=sunPos(curMins,MAP_LAT,MAP_LON),t=sunTimes(MAP_LAT,MAP_LON);
   const isNight=p.el<=0,isTwi=p.el>0&&p.el<4;
@@ -776,23 +685,68 @@ function updateDayNightUI(){
   return{p,t};
 }
 
-// ── WEATHER ───────────────────────────────────────────────────────────────────
+// ── WEATHER ──────────────────────────────────────────────────────────────────
 async function fetchWeather(lat,lon){
-  wLoaded=false;
+  wLoaded=false;hCloud=[];hCode=[];hPrec=[];hUV=[];wDates=[];dData={};
   try{
-    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&hourly=cloud_cover,weather_code,precipitation,uv_index&daily=weather_code,precipitation_sum,cloud_cover_mean&forecast_days=7&timezone=auto`);
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${parseFloat(lat).toFixed(4)}&longitude=${parseFloat(lon).toFixed(4)}&hourly=cloud_cover,weather_code,precipitation,uv_index&daily=weather_code,precipitation_sum,cloud_cover_mean&forecast_days=7&timezone=auto`);
+    if(!r.ok)throw new Error(r.status);
     const data=await r.json();
-    hCloud=data.hourly.cloud_cover;hCode=data.hourly.weather_code;
-    hPrec=data.hourly.precipitation;hUV=data.hourly.uv_index;
-    wDates=data.hourly.time.map(t=>t.slice(0,10));dData=data.daily;
-    wLoaded=true;renderForecast();updatePanel();
-  }catch(e){document.getElementById('wxdesc').textContent='No disponible';}
+    hCloud=data.hourly.cloud_cover;
+    hCode=data.hourly.weather_code;
+    hPrec=data.hourly.precipitation;
+    hUV=data.hourly.uv_index;
+    wDates=data.hourly.time.map(t=>t.slice(0,10));
+    dData=data.daily;
+    wLoaded=true;
+    renderForecast();
+    updateWeatherUI(); // update weather panel immediately after load
+  }catch(e){
+    document.getElementById('wxdesc').textContent='No disponible';
+    console.warn('Weather fetch failed:',e);
+  }
 }
+
 function getCurCloud(){
   if(!wLoaded)return null;
   const ds=curDate.toISOString().split('T')[0],base=wDates.indexOf(ds);
   return base>=0?(hCloud[base+Math.floor(curMins/60)]??null):null;
 }
+
+// Weather UI update — separated from panel so it can be called independently
+function updateWeatherUI(){
+  if(!wLoaded)return;
+  const ds=curDate.toISOString().split('T')[0];
+  const base=wDates.indexOf(ds);
+  if(base<0)return;
+  const idx=base+Math.floor(curMins/60);
+  if(idx<0||idx>=hUV.length)return;
+
+  // UV
+  const uv=hUV[idx];
+  if(uv!=null){
+    const ui=uvInfo(uv);
+    document.getElementById('uvnum').textContent=uv.toFixed(1);
+    document.getElementById('uvbadge').textContent=ui.lv;
+    document.getElementById('uvbadge').style.background=ui.bg;
+    document.getElementById('uvbadge').style.color=ui.bc;
+    document.getElementById('uvspf').textContent=ui.spf;
+    document.getElementById('uvcur').style.left=(ui.pct*100).toFixed(1)+'%';
+    document.getElementById('uvtip').textContent=ui.tip;
+  }
+
+  // Weather
+  const code=hCode[idx]??0;
+  const cld=hCloud[idx]??0;
+  const prc=hPrec[idx]??0;
+  document.getElementById('wxicon').textContent=wmoI[code]||'🌡';
+  document.getElementById('wxdesc').textContent=wmoD[code]||'—';
+  document.getElementById('wxsub').textContent=prc>0?'Precipitación detectada'
+    :`Cielo ${cld<20?'despejado':cld<50?'parcialmente nublado':'cubierto'}`;
+  document.getElementById('wx-nubes').textContent=cld+'%';
+  document.getElementById('wx-prec').textContent=prc.toFixed(1)+' mm';
+}
+
 const wmoD={0:'Despejado',1:'Casi despejado',2:'Parcialmente nublado',3:'Cubierto',45:'Niebla',48:'Niebla engelante',51:'Llovizna leve',53:'Llovizna',55:'Llovizna intensa',61:'Lluvia leve',63:'Lluvia',65:'Lluvia intensa',71:'Nevada leve',73:'Nevada',75:'Nevada intensa',80:'Chubascos',82:'Chubascos fuertes',95:'Tormenta',99:'Tormenta intensa'};
 const wmoI={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌧',55:'🌧',61:'🌦',63:'🌧',65:'🌧',71:'🌨',73:'🌨',75:'❄️',80:'🌦',82:'⛈',95:'⛈',99:'⛈'};
 
@@ -810,11 +764,11 @@ function renderForecast(){
 
 function uvInfo(uv){
   if(uv==null)return null;const pct=Math.min(uv/11,1);
-  if(uv<3)return{lv:'Bajo',bg:'rgba(29,158,117,0.15)',bc:'#1D9E75',spf:'Sin riesgo',tip:'Sin riesgo solar significativo.',pct};
-  if(uv<6)return{lv:'Moderado',bg:'rgba(239,159,39,0.15)',bc:'#EF9F27',spf:'SPF 30+',tip:'Protector recomendado 20 min antes de salir.',pct};
-  if(uv<8)return{lv:'Alto',bg:'rgba(216,90,48,0.15)',bc:'#D85A30',spf:'SPF 50+',tip:'Evita el sol al mediodía. Busca sombra.',pct};
-  if(uv<11)return{lv:'Muy alto',bg:'rgba(226,75,74,0.15)',bc:'#E24B4A',spf:'SPF 50+',tip:'Riesgo extremo. Camisa, gafas y sombrero.',pct};
-  return{lv:'Extremo',bg:'rgba(127,119,221,0.15)',bc:'#7F77DD',spf:'SPF 50+',tip:'¡Peligro! No salgas sin protección total.',pct};
+  if(uv<3)return{lv:'Bajo',bg:'rgba(29,158,117,.15)',bc:'#1D9E75',spf:'Sin riesgo',tip:'Sin riesgo solar significativo.',pct};
+  if(uv<6)return{lv:'Moderado',bg:'rgba(239,159,39,.15)',bc:'#EF9F27',spf:'SPF 30+',tip:'Protector recomendado 20 min antes de salir.',pct};
+  if(uv<8)return{lv:'Alto',bg:'rgba(216,90,48,.15)',bc:'#D85A30',spf:'SPF 50+',tip:'Evita el sol al mediodía. Busca sombra.',pct};
+  if(uv<11)return{lv:'Muy alto',bg:'rgba(226,75,74,.15)',bc:'#E24B4A',spf:'SPF 50+',tip:'Riesgo extremo. Camisa, gafas y sombrero.',pct};
+  return{lv:'Extremo',bg:'rgba(127,119,221,.15)',bc:'#7F77DD',spf:'SPF 50+',tip:'¡Peligro! No salgas sin protección total.',pct};
 }
 
 function drawStrip(){
@@ -822,26 +776,26 @@ function drawStrip(){
   const W=Math.max(cv.offsetWidth||220,220)*2;cv.width=W;
   const ctx=cv.getContext('2d');ctx.clearRect(0,0,W,10);
   const t=sunTimes(MAP_LAT,MAP_LON);
-  const nightColor=theme==='dark'?'rgba(10,15,40,0.50)':'rgba(20,30,80,0.09)';
-  const dayColor  =theme==='dark'?'rgba(255,180,50,0.06)':'rgba(255,200,70,0.07)';
+  const nc=theme==='dark'?'rgba(10,15,40,.50)':'rgba(20,30,80,.09)';
+  const dc=theme==='dark'?'rgba(255,180,50,.06)':'rgba(255,200,70,.07)';
   const srX=(Math.max(0,t.sr)/24)*W,ssX=(Math.min(24,t.ss)/24)*W;
-  ctx.fillStyle=nightColor;ctx.fillRect(0,0,srX,10);
-  ctx.fillStyle=dayColor;ctx.fillRect(srX,0,ssX-srX,10);
-  ctx.fillStyle=nightColor;ctx.fillRect(ssX,0,W-ssX,10);
+  ctx.fillStyle=nc;ctx.fillRect(0,0,srX,10);
+  ctx.fillStyle=dc;ctx.fillRect(srX,0,ssX-srX,10);
+  ctx.fillStyle=nc;ctx.fillRect(ssX,0,W-ssX,10);
   if(wLoaded){
     const ds=curDate.toISOString().split('T')[0],base=wDates.indexOf(ds);
     for(let h=0;h<24;h++){
       const c=base>=0?(hCloud[base+h]??50):50,cd=base>=0?(hCode[base+h]??0):0;
       const x=(h/24)*W,w2=W/24;
       const isR=[51,53,55,61,63,65,80,81,82,95,96,99].includes(cd);
-      ctx.fillStyle=isR?`rgba(60,100,220,${0.35+c/100*0.45})`:`rgba(${Math.round(180-c/100*60)},${Math.round(190-c/100*55)},${Math.round(220-c/100*50)},0.30)`;
+      ctx.fillStyle=isR?`rgba(60,100,220,${.35+c/100*.45})`:`rgba(${Math.round(180-c/100*60)},${Math.round(190-c/100*55)},${Math.round(220-c/100*50)},.30)`;
       ctx.fillRect(x,0,w2,10);
     }
   }
-  const cx=(curMins/1440)*W;ctx.fillStyle='rgba(232,125,13,0.95)';ctx.fillRect(cx-1.5,0,3,10);
+  const cx=(curMins/1440)*W;ctx.fillStyle='rgba(232,125,13,.95)';ctx.fillRect(cx-1.5,0,3,10);
 }
 
-// ── PANEL UPDATE ──────────────────────────────────────────────────────────────
+// ── PANEL UPDATE ─────────────────────────────────────────────────────────────
 function updatePanel(){
   const{p,t}=updateDayNightUI();
   document.getElementById('tbig').textContent=fmtM(curMins);
@@ -852,34 +806,12 @@ function updatePanel(){
   document.getElementById('stss').textContent=fmtH(t.ss);
   document.getElementById('srlbl').textContent=fmtH(t.sr);
   document.getElementById('sslbl').textContent=fmtH(t.ss);
-
-  if(wLoaded){
-    const ds=curDate.toISOString().split('T')[0],base=wDates.indexOf(ds);
-    const idx=base>=0?base+Math.floor(curMins/60):-1;
-    if(idx>=0&&idx<hUV.length){
-      const uv=hUV[idx],ui=uvInfo(uv);
-      if(ui){
-        document.getElementById('uvnum').textContent=uv!=null?uv.toFixed(1):'--';
-        document.getElementById('uvbadge').textContent=ui.lv;
-        document.getElementById('uvbadge').style.background=ui.bg;
-        document.getElementById('uvbadge').style.color=ui.bc;
-        document.getElementById('uvspf').textContent=ui.spf;
-        document.getElementById('uvcur').style.left=(ui.pct*100).toFixed(1)+'%';
-        document.getElementById('uvtip').textContent=ui.tip;
-      }
-      const code=hCode[idx],cld=hCloud[idx],prc=hPrec[idx]||0;
-      document.getElementById('wxicon').textContent=wmoI[code]||'🌡';
-      document.getElementById('wxdesc').textContent=wmoD[code]||'—';
-      document.getElementById('wxsub').textContent=prc>0?'Precipitación detectada':`Cielo ${cld<20?'despejado':cld<50?'parcialmente nublado':'cubierto'}`;
-      document.getElementById('wx-c').textContent=cld+'%';
-      document.getElementById('wx-p').textContent=prc.toFixed(1)+' mm';
-    }
-  }
+  updateWeatherUI();
   applyLight();drawStrip();shadowDirty=true;scheduleRender();
 }
 function update(){updatePanel();}
 
-// ── SEARCH ────────────────────────────────────────────────────────────────────
+// ── SEARCH ───────────────────────────────────────────────────────────────────
 let stmr;
 document.getElementById('srch').addEventListener('input',function(){
   clearTimeout(stmr);const q=this.value.trim();
@@ -905,7 +837,7 @@ document.getElementById('srch').addEventListener('input',function(){
 });
 document.addEventListener('click',e=>{if(!e.target.closest('#swrap'))document.getElementById('sres').style.display='none';});
 
-// ── BOOT ──────────────────────────────────────────────────────────────────────
+// ── BOOT ─────────────────────────────────────────────────────────────────────
 function initTime(){
   const now=new Date();
   curDate=new Date(now.getFullYear(),now.getMonth(),now.getDate());
@@ -917,7 +849,6 @@ document.getElementById('tsl').addEventListener('input',function(){curMins=+this
 document.getElementById('din').addEventListener('change',function(){curDate=new Date(this.value+'T00:00:00');update();fetchWeather(MAP_LAT,MAP_LON);});
 function setSeas(m,dy){const dt=new Date();dt.setMonth(m,dy);dt.setHours(0,0,0,0);curDate=dt;document.getElementById('din').value=dt.toISOString().split('T')[0];update();fetchWeather(MAP_LAT,MAP_LON);}
 
-// Apply saved theme on load
 document.documentElement.setAttribute('data-theme',theme);
 document.getElementById('theme-btn').textContent=theme==='dark'?'☀️':'🌙';
 
