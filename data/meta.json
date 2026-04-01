@@ -1,14 +1,13 @@
 {
-  "generated": "2026-04-01T00:24:43Z",
+  "generated": "2026-04-01T10:57:30Z",
   "source": "Ayuntamiento de Madrid \u2014 Alturas de Edificios",
   "buildings": 36128,
   "tiles": 2198,
   "tile_deg": 0.004,
-  "adj_buf": 6e-06,
   "bbox": {
-    "w": -3.883871,
-    "s": 40.317471,
+    "w": -3.88387,
+    "s": 40.31747,
     "e": -3.51978,
-    "n": 40.616935
+    "n": 40.61693
   }
 }
