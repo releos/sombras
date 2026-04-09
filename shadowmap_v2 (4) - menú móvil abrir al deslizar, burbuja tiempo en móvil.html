@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ShadowMap · Madrid</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<style>
+:root,[data-theme="dark"]{
+  --bg:#0f1420;--panel:#1a1f2e;--surface:#2a3040;--border:#3a4050;
+  --text:#e0e0e0;--muted:#888;--dim:#555;
+}
+[data-theme="light"]{
+  --bg:#f0f2f5;--panel:#ffffff;--surface:#f7f9fb;--border:#dde2ea;
+  --text:#0f1420;--muted:#888;--dim:#aaa;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{height:100%;}
+body{height:100%;min-height:-webkit-fill-available;font-family:'Helvetica Neue',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;transition:background .3s,color .3s;}
+
+/* ── LAYOUT ── */
+#app{display:grid;grid-template-columns:268px 1fr;height:100vh;height:100dvh;transition:grid-template-columns .28s ease;}
+#app.panel-hidden{grid-template-columns:0px 1fr;}
+
+/* ── PANEL ── */
+#panel{background:var(--panel);border-right:0.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden;z-index:10;transition:background .3s;min-width:0;}
+#panel-tabs{display:flex;border-bottom:0.5px solid var(--border);flex-shrink:0;}
+.ptab{flex:1;padding:8px 4px;font-size:9px;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;border:none;background:transparent;color:var(--dim);transition:all .15s;border-bottom:2px solid transparent;margin-bottom:-1px;}
+.ptab:hover{color:var(--muted);}
+.ptab.active{color:var(--text);border-bottom-color:#e87d0d;}
+.tab-pane{display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0;}
+.tab-pane.active{display:flex;}
+#pscroll{overflow-y:auto;flex:1;padding:14px 12px;}
+#pscroll::-webkit-scrollbar{width:2px;}
+#pscroll::-webkit-scrollbar-thumb{background:var(--border);}
+.tab-scroll{overflow-y:auto;flex:1;padding:14px 12px;font-size:11px;color:var(--muted);line-height:1.6;}
+.tab-scroll::-webkit-scrollbar{width:2px;}
+.tab-scroll::-webkit-scrollbar-thumb{background:var(--border);}
+.tab-scroll h3{font-size:11px;font-weight:600;color:var(--text);margin:12px 0 5px;letter-spacing:.03em;}
+.tab-scroll h3:first-child{margin-top:0;}
+.tab-scroll p{margin-bottom:8px;font-size:10px;}
+.tab-scroll a{color:#e87d0d;text-decoration:none;}
+.tab-scroll .credit-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;padding:7px 9px;background:var(--surface);border-radius:6px;border:0.5px solid var(--border);}
+.tab-scroll .credit-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.tab-scroll .credit-text{font-size:9px;line-height:1.5;}
+.tab-scroll .credit-text strong{display:block;font-size:10px;color:var(--text);margin-bottom:1px;}
+.tut-step{display:flex;gap:10px;margin-bottom:10px;padding:8px 10px;background:var(--surface);border-radius:7px;border:0.5px solid var(--border);}
+.tut-num{width:20px;height:20px;border-radius:50%;background:#e87d0d;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.tut-body{flex:1;}
+.tut-body strong{display:block;font-size:10px;color:var(--text);margin-bottom:2px;}
+.tut-body span{font-size:9px;color:var(--muted);line-height:1.5;}
+
+.logo{font-size:15px;font-weight:700;color:var(--text);margin-bottom:1px;}
+.logo span{color:#e87d0d;}
+.subloc{font-size:10px;color:var(--muted);margin-bottom:14px;}
+.lbl{font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--dim);margin:0 0 5px;}
+#tbig{font-size:32px;font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:-1px;color:var(--text);line-height:1;margin-bottom:2px;}
+#sunst{font-size:10px;color:var(--muted);margin-bottom:9px;min-height:13px;}
+input[type=range]{width:100%;-webkit-appearance:none;height:2px;border-radius:2px;background:var(--surface);outline:none;margin-bottom:2px;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#e87d0d;cursor:pointer;}
+#wsc{display:block;width:100%;height:10px;border-radius:2px;margin-bottom:3px;}
+.stlbls{display:flex;justify-content:space-between;font-size:9px;color:var(--dim);margin-bottom:12px;}
+input[type=date]{width:100%;background:var(--surface);border:0.5px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px;margin-bottom:10px;cursor:pointer;}
+[data-theme="dark"] input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);opacity:.6;}
+.sgrid4{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:10px;}
+.sc{background:var(--surface);border-radius:6px;padding:6px 8px;border:0.5px solid var(--border);}
+.sc-l{font-size:9px;color:var(--dim);margin-bottom:1px;}
+.sc-v{font-size:12px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;}
+#src-badge{display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:6px;margin-bottom:10px;font-size:10px;background:var(--surface);border:0.5px solid var(--border);transition:all .3s;}
+#src-badge.ok{background:rgba(46,160,90,.12);border-color:rgba(46,160,90,.35);}
+#src-badge.err{background:rgba(200,50,50,.12);border-color:rgba(200,50,50,.35);}
+.sb-dot{width:6px;height:6px;border-radius:50%;background:var(--dim);flex-shrink:0;}
+#src-badge.ok .sb-dot{background:#2ea05a;}
+#src-badge.err .sb-dot{background:#c03030;}
+.sb-text{flex:1;line-height:1.3;color:var(--muted);}
+#src-badge.ok .sb-text{color:#2ea05a;}
+[data-theme="dark"] #src-badge.ok .sb-text{color:#6ee7a8;}
+#src-badge.err .sb-text{color:#c03030;}
+.sb-n{font-family:monospace;font-size:9px;color:var(--dim);}
+#src-badge.ok .sb-n{color:#2ea05a;}
+#nightbanner{display:none;background:#1a2340;border-radius:7px;padding:10px;margin-bottom:10px;border:0.5px solid #263057;}
+.nb-icon{font-size:18px;margin-bottom:4px;}.nb-title{font-size:11px;font-weight:600;color:#a0b8e8;margin-bottom:2px;}
+.nb-sub{font-size:9px;color:#6070a0;line-height:1.4;}
+.nb-times{display:flex;gap:6px;margin-top:6px;}
+.nb-t{flex:1;background:#243060;border-radius:4px;padding:4px 6px;text-align:center;}
+.nb-tl{font-size:9px;color:#6070a0;margin-bottom:1px;}
+.nb-tv{font-size:12px;font-weight:600;color:#a0c0f8;font-variant-numeric:tabular-nums;}
+#twibanner{display:none;background:#2a1a0a;border-radius:6px;padding:8px 10px;margin-bottom:10px;border:0.5px solid #5a3010;}
+#twibanner p:first-child{font-size:10px;font-weight:600;color:#e8a060;margin-bottom:2px;}
+#twibanner p:last-child{font-size:9px;color:#a06030;line-height:1.3;}
+#uvcard{border-radius:6px;padding:9px;margin-bottom:10px;border:0.5px solid var(--border);background:var(--surface);transition:background .3s,border-color .3s;}
+.uvrow{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+#uvnum{font-size:26px;font-weight:300;font-variant-numeric:tabular-nums;color:var(--text);line-height:1;}
+#uvbadge{font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;display:inline-block;margin-bottom:2px;background:var(--border);color:var(--muted);}
+#uvspf{font-size:9px;color:var(--dim);}
+.uvbar{height:3px;border-radius:2px;background:linear-gradient(to right,#1D9E75,#EF9F27,#D85A30,#E24B4A,#7F77DD);position:relative;margin-bottom:4px;}
+#uvcur{position:absolute;top:-5px;width:2px;height:13px;border-radius:1px;background:var(--text);transform:translateX(-50%);left:0%;transition:left .3s;}
+#uvtip{font-size:9px;color:var(--muted);line-height:1.4;}
+#wxcard{background:var(--surface);border:0.5px solid var(--border);border-radius:6px;padding:8px;margin-bottom:10px;}
+.wxrow{display:flex;align-items:center;gap:4px;margin-bottom:4px;}
+#wxicon{font-size:18px;line-height:1;}
+#wxtemp{font-size:22px;font-weight:300;color:var(--text);margin-left:4px;margin-right:8px;font-variant-numeric:tabular-nums;}
+#wxdesc{font-size:11px;font-weight:500;color:var(--text);}
+#wxsub{font-size:9px;color:var(--muted);}
+.wxg{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.wx-l{font-size:9px;color:var(--dim);margin-bottom:1px;}
+.wx-v{font-size:11px;font-weight:500;color:var(--text);}
+#fcast{margin-bottom:10px;}
+.frow{display:flex;align-items:center;gap:6px;padding:3px 2px;border-radius:3px;cursor:pointer;font-size:10px;color:var(--muted);}
+.frow:hover{background:var(--surface);}
+.fi{font-size:12px;width:16px;text-align:center;}.fn{width:22px;color:var(--dim);}.fd{flex:1;}.fc{font-family:monospace;font-size:10px;color:var(--text);font-weight:500;text-align:right;min-width:45px;}
+#dsrc{font-size:9px;color:var(--border);padding:4px 12px;text-align:right;flex-shrink:0;}
+
+/* ── MAP WRAP ── */
+#mapwrap{position:relative;overflow:hidden;}
+#map{position:absolute;inset:0;}
+#shcanvas{position:absolute;inset:0;pointer-events:none;z-index:2;will-change:contents;}
+#mapnight{position:absolute;inset:0;background:rgba(8,12,28,.75);z-index:4;display:none;pointer-events:none;}
+#mapnight-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.mn-icon{font-size:36px;margin-bottom:7px;opacity:.6;}
+.mn-title{font-size:15px;font-weight:300;color:rgba(180,200,255,.75);margin-bottom:4px;}
+.mn-sub{font-size:11px;color:rgba(110,140,210,.55);}
+#maptwi{position:absolute;inset:0;background:rgba(70,25,0,.18);z-index:3;display:none;pointer-events:none;}
+
+/* ── TOOLBAR ── */
+#toolbar{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:6;}
+#toolbar-inner{display:flex;gap:2px;background:var(--panel);border:0.5px solid var(--border);border-radius:7px;padding:3px;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+.tb{padding:5px 11px;border-radius:4px;font-size:10px;cursor:pointer;border:none;background:transparent;color:var(--dim);transition:all .12s;}
+.tb:hover{background:var(--surface);}
+.tb.on2d{background:rgba(232,125,13,.18);color:#e87d0d;}
+.tb.on3d{background:rgba(50,120,200,.18);color:#5090e0;}
+.tb.onsearch{background:rgba(232,125,13,.15);color:#e87d0d;}
+.tb.locating{color:#e87d0d;animation:pulse 1s infinite;}
+.tb.locok{color:#2ea05a;}
+.tb.locerr{color:#c03030;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── SEARCH OVERLAY ── */
+#search-overlay{position:absolute;top:46px;left:50%;transform:translateX(-50%);z-index:6;width:280px;max-width:90vw;}
+#srch{width:100%;background:var(--panel);border:0.5px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.3);outline:none;}
+#srch:focus{border-color:rgba(232,125,13,.5);}
+#srch::placeholder{color:var(--dim);}
+#sres{background:var(--panel);border:0.5px solid var(--border);border-radius:7px;margin-top:3px;overflow:hidden;display:none;box-shadow:0 4px 12px rgba(0,0,0,.3);}
+.sresrow{padding:7px 12px;font-size:11px;cursor:pointer;color:var(--muted);border-bottom:0.5px solid var(--surface);}
+.sresrow:hover{background:var(--surface);color:var(--text);}
+.sresrow:last-child{border-bottom:none;}
+
+/* ── PANEL TOGGLE (desktop) ── */
+#panel-toggle{position:absolute;top:50%;left:0;transform:translateY(-50%);z-index:11;width:18px;height:44px;background:var(--panel);border:0.5px solid var(--border);border-left:none;border-radius:0 6px 6px 0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);transition:background .2s;box-shadow:2px 0 6px rgba(0,0,0,.15);}
+#panel-toggle:hover{background:var(--surface);}
+
+/* ── MAP OVERLAYS ── */
+#compass{position:absolute;top:50px;right:10px;width:50px;height:50px;background:var(--panel);border:0.5px solid var(--border);border-radius:50%;z-index:5;display:none;}
+#compass svg{position:absolute;inset:0;}
+#camhint{position:absolute;top:50px;left:10px;background:var(--panel);border:0.5px solid var(--border);border-radius:6px;padding:5px 8px;z-index:5;font-size:9px;color:var(--muted);line-height:1.5;display:none;opacity:.9;}
+#leg{position:absolute;bottom:30px;left:10px;background:var(--panel);border:0.5px solid var(--border);border-radius:6px;padding:6px 9px;z-index:5;font-size:9px;color:var(--muted);}
+#leg div{display:flex;align-items:center;gap:4px;margin-bottom:2px;}
+#leg div:last-child{margin-bottom:0;}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+#statusbar{position:absolute;bottom:0;left:0;right:0;background:var(--panel);border-top:0.5px solid var(--border);padding:3px 10px;z-index:5;font-size:9px;color:var(--dim);opacity:.9;}
+#lodbar{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);background:var(--panel);border:0.5px solid var(--border);border-radius:18px;padding:5px 12px;z-index:5;font-size:10px;color:var(--muted);display:none;white-space:nowrap;}
+
+/* ── WEATHER BUBBLE (map overlay) ── */
+#wxbubble{position:absolute;top:10px;left:10px;z-index:5;background:var(--panel);border:0.5px solid var(--border);border-radius:20px;padding:5px 11px 5px 8px;display:none;align-items:center;gap:7px;box-shadow:0 2px 8px rgba(0,0,0,.2);transition:background .3s,border-color .3s;}
+#wxb-icon{font-size:16px;line-height:1;}
+#wxb-temp{font-size:14px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--text);}
+.wxb-sep{width:0.5px;height:18px;background:var(--border);}
+.wxb-mini{font-size:9px;color:var(--muted);line-height:1.55;white-space:nowrap;}
+
+/* ── GEO TOAST ── */
+#geo-toast{position:absolute;top:50px;left:50%;transform:translateX(-50%);z-index:7;background:var(--panel);border:0.5px solid var(--border);border-radius:20px;padding:6px 14px;font-size:10px;color:var(--text);white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.25);display:none;align-items:center;gap:7px;transition:opacity .3s;}
+#geo-toast.show{display:flex;}
+#geo-toast .gt-dot{width:7px;height:7px;border-radius:50%;background:var(--dim);flex-shrink:0;}
+#geo-toast.locating .gt-dot{background:#e87d0d;animation:pulse 1s infinite;}
+#geo-toast.locok .gt-dot{background:#2ea05a;}
+#geo-toast.locerr .gt-dot{background:#c03030;}
+#geo-toast .gt-txt{color:var(--muted);}
+#geo-toast.locating .gt-txt{color:var(--text);}
+#geo-toast.locok .gt-txt{color:#2ea05a;}
+[data-theme="dark"] #geo-toast.locok .gt-txt{color:#6ee7a8;}
+#geo-toast.locerr .gt-txt{color:#c03030;}
+.maplibregl-ctrl-bottom-right{bottom:22px!important;}
+.maplibregl-ctrl-bottom-left{bottom:22px!important;}
+
+/* ── POPUP ── */
+.h-popup{background:var(--panel);border:0.5px solid var(--border);border-radius:7px;padding:9px 11px;font-size:11px;min-width:140px;}
+.h-popup strong{display:block;font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.h-popup .hp-row{display:flex;justify-content:space-between;color:var(--muted);margin-bottom:2px;gap:10px;}
+.h-popup .hp-src{font-size:9px;margin-top:4px;padding-top:4px;border-top:0.5px solid var(--surface);color:#2ea05a;font-weight:500;}
+[data-theme="dark"] .h-popup .hp-src{color:#6ee7a8;}
+.maplibregl-popup-content{padding:0!important;border-radius:7px!important;box-shadow:none!important;}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  #app{grid-template-columns:1fr;grid-template-rows:1fr auto;}
+  #mapwrap{grid-column:1;grid-row:1;}
+  #panel{grid-column:1;grid-row:2;border-right:none;border-top:0.5px solid var(--border);flex-direction:column;max-height:65vh;transition:max-height .32s cubic-bezier(.4,0,.2,1);}
+  #panel.mob-collapsed{max-height:54px;height:54px;overflow:hidden;}
+  #panel-toggle{display:none;}
+  #mob-handle{display:flex!important;flex-direction:column;align-items:stretch;flex-shrink:0;cursor:grab;user-select:none;}
+  #mob-handle:active{cursor:grabbing;}
+  #mob-pill-row{display:flex;justify-content:center;padding:6px 0 4px;}
+  #mob-pill{width:36px;height:4px;border-radius:2px;background:var(--border);}
+  #mob-slider-row{display:flex;align-items:center;gap:8px;padding:0 10px 8px;}
+  #mob-timemini{font-size:13px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--text);white-space:nowrap;min-width:36px;}
+  #tsl-mob{flex:1;margin:0;}
+  #panel-tabs{flex-shrink:0;}
+  #wxbubble{display:flex!important;top:10px;left:10px;}
+  #camhint{display:none!important;}
+  .maplibregl-ctrl-bottom-right{bottom:22px!important;}
+}
+/* Hide mob-handle on desktop */
+#mob-handle{display:none;}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══ PANEL ══ -->
+<div id="panel">
+  <!-- Mobile swipe handle -->
+  <div id="mob-handle">
+    <div id="mob-pill-row"><div id="mob-pill"></div></div>
+    <div id="mob-slider-row">
+      <div id="mob-timemini">--:--</div>
+      <input type="range" min="0" max="1439" value="720" id="tsl-mob">
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div id="panel-tabs">
+    <button class="ptab active" id="tab-btn-info"     onclick="showTab('info')">☀️ Info</button>
+    <button class="ptab"        id="tab-btn-proyecto"  onclick="showTab('proyecto')">ℹ Proyecto</button>
+    <button class="ptab"        id="tab-btn-tutorial"  onclick="showTab('tutorial')">❓ Tutorial</button>
+  </div>
+
+  <!-- Tab: Info -->
+  <div id="tab-info" class="tab-pane active">
+    <div id="pscroll">
+      <p class="logo">Shadow<span>Map</span> <span style="font-size:10px;font-weight:400;color:var(--dim);margin-left:2px;">Madrid</span></p>
+      <p class="subloc" id="subloc-txt">Madrid, España</p>
+      <p class="lbl">Hora local</p>
+      <div id="tbig">--:--</div>
+      <div id="sunst">—</div>
+      <input type="range" min="0" max="1439" value="720" id="tsl">
+      <canvas id="wsc" height="10"></canvas>
+      <div class="stlbls"><span id="srlbl">Amanecer</span><span id="sslbl">Atardecer</span></div>
+      <div id="nightbanner">
+        <div class="nb-icon">🌙</div>
+        <div class="nb-title">Noche — sin luz solar directa</div>
+        <div class="nb-sub">Sombras solo con el sol por encima del horizonte.</div>
+        <div class="nb-times">
+          <div class="nb-t"><div class="nb-tl">Amanecer</div><div class="nb-tv" id="nb-sr">—</div></div>
+          <div class="nb-t"><div class="nb-tl">Atardecer</div><div class="nb-tv" id="nb-ss">—</div></div>
+        </div>
+      </div>
+      <div id="twibanner"><p>🌅 Crepúsculo — sombras muy largas</p><p>Sol a menos de 4°, sombras limitadas a 300 m.</p></div>
+      <p class="lbl">Datos de edificios</p>
+      <div id="src-badge">
+        <div class="sb-dot" id="sb-dot"></div>
+        <div class="sb-text" id="sb-text">Cargando…</div>
+        <div class="sb-n" id="sb-n"></div>
+      </div>
+      <p class="lbl">Fecha</p>
+      <input type="date" id="din">
+      <p class="lbl">Posición solar</p>
+      <div class="sgrid4">
+        <div class="sc"><div class="sc-l">Azimut</div><div class="sc-v" id="staz">—</div></div>
+        <div class="sc"><div class="sc-l">Elevación</div><div class="sc-v" id="stel">—</div></div>
+        <div class="sc"><div class="sc-l">Amanecer</div><div class="sc-v" id="stsr">—</div></div>
+        <div class="sc"><div class="sc-l">Atardecer</div><div class="sc-v" id="stss">—</div></div>
+      </div>
+      <p class="lbl">Índice UV & Protección</p>
+      <div id="uvcard">
+        <div class="uvrow"><div id="uvnum">--</div><div><div id="uvbadge">--</div><div id="uvspf">--</div></div></div>
+        <div class="uvbar"><div id="uvcur"></div></div>
+        <p id="uvtip">Cargando datos meteorológicos…</p>
+      </div>
+      <p class="lbl">Tiempo actual</p>
+      <div id="wxcard">
+        <div class="wxrow">
+          <span id="wxicon">--</span>
+          <div id="wxtemp">--°</div>
+          <div><div id="wxdesc">Cargando…</div><div id="wxsub">--</div></div>
+        </div>
+        <div class="wxg">
+          <div><p class="wx-l">Nubes</p><p class="wx-v" id="wx-nubes">--%</p></div>
+          <div><p class="wx-l">Precip.</p><p class="wx-v" id="wx-prec">-- mm</p></div>
+        </div>
+      </div>
+      <p class="lbl">Previsión 7 días</p>
+      <div id="fcast"></div>
+    </div>
+  </div><!-- /tab-info -->
+
+  <!-- Tab: Proyecto -->
+  <div id="tab-proyecto" class="tab-pane">
+    <div class="tab-scroll">
+      <h3>Sobre ShadowMap</h3>
+      <p>ShadowMap calcula y visualiza las sombras proyectadas por los edificios de Madrid en tiempo real, para cualquier hora del día y época del año.</p>
+      <p>Las sombras se calculan con geometría solar precisa (azimut y elevación reales) y la geometría 3D de cada edificio.</p>
+      <h3>Fuentes de datos</h3>
+      <div class="credit-row">
+        <div class="credit-icon">🏛</div>
+        <div class="credit-text"><strong>Geometría de edificios</strong>Ayuntamiento de Madrid — Catálogo de edificios, diciembre 2025. Coordenadas oficiales WGS84.</div>
+      </div>
+      <div class="credit-row">
+        <div class="credit-icon">🌤</div>
+        <div class="credit-text"><strong>Datos meteorológicos</strong><a href="https://open-meteo.com" target="_blank">Open-Meteo</a> — API abierta de previsión meteorológica. Sin límite de uso.</div>
+      </div>
+      <div class="credit-row">
+        <div class="credit-icon">🗺</div>
+        <div class="credit-text"><strong>Cartografía base</strong>Modo oscuro: <a href="https://carto.com" target="_blank">CARTO Dark Matter</a>. Modo claro: <a href="https://openfreemap.org" target="_blank">OpenFreeMap Liberty</a>. Motor: <a href="https://maplibre.org" target="_blank">MapLibre GL JS</a>.</div>
+      </div>
+      <div class="credit-row">
+        <div class="credit-icon">🔭</div>
+        <div class="credit-text"><strong>Cálculo solar</strong>Algoritmo de posición solar basado en la ecuación del tiempo (NOAA). Precisión &lt;0.1° para latitudes medias.</div>
+      </div>
+      <h3>Limitaciones</h3>
+      <p>Los datos de alturas corresponden a las plantas registradas en diciembre de 2025. Edificios en construcción o reformas recientes pueden no estar actualizados.</p>
+      <p>Las sombras son proyecciones geométricas ideales: no se modelan reflexiones, vegetación ni pendientes del terreno.</p>
+    </div>
+  </div><!-- /tab-proyecto -->
+
+  <!-- Tab: Tutorial -->
+  <div id="tab-tutorial" class="tab-pane">
+    <div class="tab-scroll">
+      <div class="tut-step">
+        <div class="tut-num">1</div>
+        <div class="tut-body"><strong>Navega por el mapa</strong><span>Arrastra para moverte. Usa la rueda o pellizca para hacer zoom. La app carga automáticamente los edificios de la zona visible.</span></div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">2</div>
+        <div class="tut-body"><strong>Ajusta la hora</strong><span>Mueve el deslizador de tiempo para ver cómo cambian las sombras a lo largo del día. El trazo naranja muestra la posición actual.</span></div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">3</div>
+        <div class="tut-body"><strong>Cambia la fecha</strong><span>Elige cualquier fecha para comparar sombras en distintas estaciones. En invierno el sol es más bajo y las sombras más largas.</span></div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">4</div>
+        <div class="tut-body"><strong>Modo 3D</strong><span>Pulsa el botón 3D en la barra superior. Los edificios se muestran en perspectiva con sus alturas reales. Mantén Ctrl + arrastra para rotar la cámara.</span></div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">5</div>
+        <div class="tut-body"><strong>Busca una dirección</strong><span>Pulsa el icono 🔍 en la barra superior para buscar cualquier calle o lugar de Madrid y saltar directamente a ese punto.</span></div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">6</div>
+        <div class="tut-body"><strong>Haz clic en un edificio (3D)</strong><span>En modo 3D, toca cualquier edificio para ver su altura y la longitud estimada de su sombra en el momento seleccionado.</span></div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">7</div>
+        <div class="tut-body"><strong>Modo claro / oscuro</strong><span>Usa el botón ☀️/🌙 para cambiar el estilo del mapa. Las sombras y edificios conservan siempre el mismo aspecto.</span></div>
+      </div>
+    </div>
+  </div><!-- /tab-tutorial -->
+
+  <div id="dsrc">Alturas: Ayto. Madrid dic.2025 · Clima: Open-Meteo</div>
+</div><!-- /panel -->
+
+<!-- ══ MAP ══ -->
+<div id="mapwrap">
+  <div id="panel-toggle" onclick="togglePanel()" title="Ocultar/mostrar panel">‹</div>
+  <div id="map"></div>
+  <canvas id="shcanvas"></canvas>
+  <div id="maptwi"></div>
+  <div id="mapnight">
+    <div id="mapnight-inner">
+      <div class="mn-icon">🌙</div>
+      <div class="mn-title">Es de noche</div>
+      <div class="mn-sub" id="mn-sub">Mueve el slider hacia las horas del día</div>
+    </div>
+  </div>
+
+  <!-- Weather bubble -->
+  <div id="wxbubble">
+    <div id="wxb-icon">--</div>
+    <div id="wxb-temp">--°</div>
+    <div class="wxb-sep"></div>
+    <div class="wxb-mini" id="wxb-mini">--</div>
+  </div>
+
+  <!-- Floating search -->
+  <div id="search-overlay" style="display:none">
+    <input type="text" id="srch" placeholder="Buscar en Madrid…" autocomplete="off">
+    <div id="sres"></div>
+  </div>
+
+  <div id="lodbar">Acerca para ver edificios en 3D (zoom 16+)</div>
+  <div id="geo-toast"><div class="gt-dot"></div><span class="gt-txt">Buscando ubicación…</span></div>
+
+  <div id="toolbar">
+    <div id="toolbar-inner">
+      <button class="tb on2d" id="btn2d" onclick="setMode('2d')">2D</button>
+      <button class="tb"      id="btn3d" onclick="setMode('3d')">3D</button>
+      <button class="tb"             onclick="resetCam()">↺</button>
+      <button class="tb"      id="search-btn"   onclick="toggleSearch()" title="Buscar">🔍</button>
+      <button class="tb"      id="loc-btn"      onclick="requestLocation()" title="Mi ubicación">📍</button>
+      <button class="tb" id="theme-btn"           onclick="toggleTheme()" title="Modo claro/oscuro">☀️</button>
+    </div>
+  </div>
+
+  <div id="camhint">🖱 Ctrl+arrastrar: rotar/inclinar</div>
+  <div id="compass">
+    <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+      <text x="25" y="8"  text-anchor="middle" font-size="7" fill="var(--muted)" font-family="monospace">N</text>
+      <text x="25" y="47" text-anchor="middle" font-size="7" fill="var(--muted)" font-family="monospace">S</text>
+      <text x="6"  y="28" text-anchor="middle" font-size="7" fill="var(--muted)" font-family="monospace">O</text>
+      <text x="44" y="28" text-anchor="middle" font-size="7" fill="var(--muted)" font-family="monospace">E</text>
+      <circle cx="25" cy="25" r="14" fill="none" stroke="var(--border)" stroke-width="0.5"/>
+      <line id="bl" x1="25" y1="25" x2="25" y2="12" stroke="var(--dim)" stroke-width="1.5"/>
+      <circle id="sdot" cx="25" cy="11" r="4" fill="#e87d0d" opacity="0"/>
+      <line id="sray" x1="25" y1="25" x2="25" y2="11" stroke="#e87d0d" stroke-width="0.8" opacity="0"/>
+    </svg>
+  </div>
+  <div id="leg">
+    <div><div class="dot" style="background:rgba(232,125,13,.2);border:1px solid rgba(232,125,13,.7);"></div> Huella edificio</div>
+    <div><div class="dot" style="background:rgba(80,130,255,.55);"></div> Sombra proyectada</div>
+    <div><div class="dot" style="background:#2d6a42;"></div> Edificio 3D</div>
+    <div style="margin-top:3px;padding-top:3px;border-top:0.5px solid var(--surface);font-size:8px;color:var(--dim);">Ayto. Madrid · dic. 2025</div>
+  </div>
+  <div id="statusbar">Iniciando…</div>
+</div><!-- /mapwrap -->
+</div><!-- /app -->
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const DATA_BASE_URL = 'https://releos.github.io/sombras/';
+
+const RP=Math.PI/180;
+const rd=a=>a*RP, dg=a=>a/RP;
+const CENTER=[40.4168,-3.7038];
+const MAX_SHADOW_LENGTH=300, LOD_ZOOM=16, TILE_DEG=0.004;
+const SHADOW_MIN_ZOOM=15.0;
+const SHADOW_MAX_ZOOM=19.2;
+const IS_MOBILE=navigator.maxTouchPoints>0||/Android|iPhone/i.test(navigator.userAgent);
+const DPR=Math.min(devicePixelRatio||1,IS_MOBILE?1.5:2);
+const THROTTLE=IS_MOBILE?80:32;
+const MAP_STYLES={
+  dark:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+  light:'https://tiles.openfreemap.org/styles/liberty'
+};
+
+// ── UTILIDADES DE FECHA LOCAL ───────────────────────────────────────────────
+function getLocalIsoDate(d){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+let MAP_LAT=CENTER[0], MAP_LON=CENTER[1];
+let curDate=new Date(), curMins=720, mode='2d';
+let theme=localStorage.getItem('smtheme')||'dark';
+let map, mapReady=false, popup=null;
+const tileCache=new Map(), tileStatus=new Map();
+let visibleGroups=[];
+let shadowDirty=true, renderPending=false, lastRender=0;
+let wLoaded=false, hCloud=[], hCode=[], hPrec=[], hUV=[], hTemp=[], wDates=[], dData={};
+let fetchTmr=null;
+
+// ── CANVAS + OFFSCREEN ──────────────────────────────────────────────────────
+const shCanvas=document.getElementById('shcanvas');
+const shCtx=shCanvas.getContext('2d',{alpha:true,desynchronized:true});
+const offCanvas=document.createElement('canvas');
+const offCtx=offCanvas.getContext('2d',{alpha:true});
+
+function resizeCanvas(){
+  const r=document.getElementById('mapwrap').getBoundingClientRect();
+  const w=Math.round(r.width*DPR), h=Math.round(r.height*DPR);
+  shCanvas.width=w; shCanvas.height=h;
+  shCanvas.style.width=r.width+'px'; shCanvas.style.height=r.height+'px';
+  offCanvas.width=w; offCanvas.height=h;
+  shadowDirty=true;
+}
+window.addEventListener('resize',()=>{resizeCanvas();scheduleRender();});
+
+// ── RENDER ──────────────────────────────────────────────────────────────────
+function scheduleRender(){
+  if(renderPending)return;
+  renderPending=true;
+  requestAnimationFrame(doRender);
+}
+function doRender(){
+  renderPending=false;
+  const now=performance.now();
+  if(!shadowDirty&&now-lastRender<THROTTLE)return;
+  lastRender=now; shadowDirty=false;
+  renderCanvas();
+}
+
+function renderCanvas(){
+  const W=shCanvas.width, H=shCanvas.height;
+  shCtx.clearRect(0,0,W,H);
+  offCtx.clearRect(0,0,W,H);
+  if(!mapReady||!visibleGroups.length)return;
+  const zoom=map.getZoom();
+  if(zoom < SHADOW_MIN_ZOOM || zoom > SHADOW_MAX_ZOOM)return;
+
+  const p=sunPos(curMins,MAP_LAT,MAP_LON);
+  const isDay=p.el>0.5;
+  const shadowsVisible = isDay && zoom <= SHADOW_MAX_ZOOM;
+  const cloud=getCurCloud();
+  const shOpacity=cloud!==null?Math.max(0.06,0.52*(1-cloud/100*0.80)):0.52;
+
+  const cosLat=Math.cos(rd(MAP_LAT));
+  const mPDLat=111000, mPDLon=111000*cosLat;
+  const lenPerM=shadowsVisible?Math.min(MAX_SHADOW_LENGTH, 1/Math.tan(rd(Math.max(p.el,0.5)))):0;
+  const uLat=shadowsVisible?-Math.cos(rd(p.az))*lenPerM/mPDLat:0;
+  const uLon=shadowsVisible?-Math.sin(rd(p.az))*lenPerM/mPDLon:0;
+
+  const strokeW=Math.max(0.5,Math.min(1.8,(zoom-13)*0.35))*DPR;
+  const isDark=theme==='dark';
+  const footFill=isDark?'rgba(232,125,13,0.06)':'rgba(232,125,13,0.05)';
+  const footStroke=isDark?'rgba(232,125,13,0.70)':'rgba(180,90,0,0.70)';
+  const shadowFlat=isDark?'rgba(80,130,255,1)':'rgba(20,50,160,1)';
+
+  let shCount=0, footCount=0;
+  const b=map.getBounds();
+  const vW=b.getWest(), vE=b.getEast(), vS=b.getSouth(), vN=b.getNorth();
+  const margin=MAX_SHADOW_LENGTH/111000;
+  const clipW=vW-margin, clipE=vE+margin, clipS=vS-margin, clipN=vN+margin;
+
+  // ── MODO 3D: sombras como capa GeoJSON dentro de MapLibre ──
+  if(mode==='3d'){
+    if(shadowsVisible && mapReady && map.getSource('madrid-shadows')){
+      const feats=[];
+      for(const g of visibleGroups){
+        for(const poly of (g.polys||[])){
+          const ring=poly.ring;
+          if(!ring||ring.length<2)continue;
+          const [lon0,lat0]=ring[0];
+          if(lon0<clipW||lon0>clipE||lat0<clipS||lat0>clipN)continue;
+          const h=poly.h;
+          const dLat=uLat*h, dLon=uLon*h;
+          const pts=[];
+          for(const[lon,lat]of ring){ pts.push([lon,lat]); pts.push([lon+dLon,lat+dLat]); }
+          if(pts.length<3)continue;
+          const sh=convexHull(pts);
+          if(sh.length<3)continue;
+          feats.push({type:'Feature',geometry:{type:'Polygon',coordinates:[[...sh,sh[0]]]},properties:{}});
+          shCount++;
+        }
+      }
+      try{
+        map.getSource('madrid-shadows').setData({type:'FeatureCollection',features:feats});
+        map.setPaintProperty('bld-shadows','fill-opacity',shOpacity);
+      }catch(e){}
+    } else if(mapReady&&map.getSource('madrid-shadows')){
+      try{map.getSource('madrid-shadows').setData({type:'FeatureCollection',features:[]});}catch(e){}
+    }
+    for(const g of visibleGroups) footCount+=(g.polys||[]).length;
+    const l10=isDay?Math.round(Math.min(MAX_SHADOW_LENGTH,10/Math.tan(rd(Math.max(p.el,0.5))))):0;
+    const eff=cloud!==null?Math.round((1-cloud/100)*100):100;
+    document.getElementById('statusbar').textContent=
+      !isDay?`${footCount} polígonos en vista · noche`
+      :zoom>SHADOW_MAX_ZOOM?`${footCount} polígonos · demasiado cerca para proyectar sombras`
+      :`${shCount} sombras · ${footCount} polígonos · elev. ${p.el.toFixed(1)}° · az. ${Math.round(p.az)}° · ~${l10}m/10m · sol ${eff}%`;
+    return;
+  }
+
+  // ── MODO 2D: canvas overlay ──
+  if(shadowsVisible){
+    for(const g of visibleGroups){
+      for(const poly of (g.polys||[])){
+        const ring=poly.ring;
+        if(!ring||ring.length<2)continue;
+        const [lon0,lat0]=ring[0];
+        if(lon0<clipW||lon0>clipE||lat0<clipS||lat0>clipN)continue;
+        const h=poly.h;
+        const dLat=uLat*h, dLon=uLon*h;
+        const pts=[];
+        for(const[lon,lat]of ring){
+          const a=map.project([lon,lat]); pts.push([a.x*DPR,a.y*DPR]);
+          const bpt=map.project([lon+dLon,lat+dLat]); pts.push([bpt.x*DPR,bpt.y*DPR]);
+        }
+        if(pts.length<3)continue;
+        const sh=convexHull(pts);
+        if(sh.length<3)continue;
+        offCtx.beginPath();
+        offCtx.moveTo(sh[0][0],sh[0][1]);
+        for(let i=1;i<sh.length;i++)offCtx.lineTo(sh[i][0],sh[i][1]);
+        offCtx.closePath();
+        offCtx.fillStyle=shadowFlat;
+        offCtx.fill();
+        shCount++;
+      }
+    }
+  }
+  if(shadowsVisible && shCount>0){
+    shCtx.globalAlpha=shOpacity;
+    shCtx.drawImage(offCanvas,0,0);
+    shCtx.globalAlpha=1;
+  }
+  for(const g of visibleGroups){
+    for(const poly of (g.polys||[])){
+      const ring=poly.ring;
+      if(!ring||ring.length<2)continue;
+      const [lon0,lat0]=ring[0];
+      if(lon0<vW||lon0>vE||lat0<vS||lat0>vN)continue;
+      shCtx.beginPath();
+      const p0=map.project([ring[0][0],ring[0][1]]);
+      shCtx.moveTo(p0.x*DPR,p0.y*DPR);
+      for(let i=1;i<ring.length;i++){
+        const pi=map.project([ring[i][0],ring[i][1]]);
+        shCtx.lineTo(pi.x*DPR,pi.y*DPR);
+      }
+      shCtx.closePath();
+      shCtx.fillStyle=footFill; shCtx.fill();
+      shCtx.strokeStyle=footStroke; shCtx.lineWidth=strokeW; shCtx.stroke();
+      footCount++;
+    }
+  }
+  const l10=isDay?Math.round(Math.min(MAX_SHADOW_LENGTH,10/Math.tan(rd(Math.max(p.el,0.5))))):0;
+  const eff=cloud!==null?Math.round((1-cloud/100)*100):100;
+  document.getElementById('statusbar').textContent=
+    !isDay?`${footCount} polígonos en vista · noche`
+    :zoom>SHADOW_MAX_ZOOM?`${footCount} polígonos · demasiado cerca para proyectar sombras`
+    :`${shCount} sombras · ${footCount} polígonos · elev. ${p.el.toFixed(1)}° · az. ${Math.round(p.az)}° · ~${l10}m/10m · sol ${eff}%`;
+}
+
+// ── CONVEX HULL ─────────────────────────────────────────────────────────────
+function cross(O,A,B){return(A[0]-O[0])*(B[1]-O[1])-(A[1]-O[1])*(B[0]-O[0]);}
+function convexHull(pts){
+  if(pts.length<3)return pts;
+  const p=pts.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  const lo=[],hi=[];
+  for(const pt of p){while(lo.length>=2&&cross(lo[lo.length-2],lo[lo.length-1],pt)<=0)lo.pop();lo.push(pt);}
+  for(let i=p.length-1;i>=0;i--){while(hi.length>=2&&cross(hi[hi.length-2],hi[hi.length-1],p[i])<=0)hi.pop();hi.push(p[i]);}
+  lo.pop();hi.pop();return[...lo,...hi];
+}
+
+// ── THEME ───────────────────────────────────────────────────────────────────
+function toggleTheme(){
+  theme=theme==='dark'?'light':'dark';
+  localStorage.setItem('smtheme',theme);
+  document.documentElement.setAttribute('data-theme',theme);
+  document.getElementById('theme-btn').textContent=theme==='dark'?'☀️':'🌙';
+  if(mapReady){
+    map.setStyle(MAP_STYLES[theme]);
+    map.once('idle',()=>{
+      setupMapLayers();
+      if(mode==='3d'){
+        try{map.setLayoutProperty('bld-3d','visibility','visible');}catch(e){}
+        try{map.setLayoutProperty('bld-shadows','visibility','visible');}catch(e){}
+        push3DBuildings();
+      }
+      applyLight();
+      shadowDirty=true;scheduleRender();
+    });
+  }
+}
+
+// ── MAP INIT ─────────────────────────────────────────────────────────────────
+function initMap(){
+  map=new maplibregl.Map({
+    container:'map',
+    style:MAP_STYLES[theme],
+    center:[CENTER[1],CENTER[0]],
+    zoom:16,pitch:0,bearing:0,
+    antialias:!IS_MOBILE,maxPitch:75,
+    maxZoom:19.5, minZoom:5.0,
+    maxBounds:[[-19.0,27.0],[5.0,44.0]],
+    dragRotate:true,touchZoomRotate:true
+  });
+  map.addControl(new maplibregl.NavigationControl({showCompass:true,visualizePitch:true}),'bottom-right');
+  map.on('rotate',updateBearing);
+  map.on('zoom',()=>{checkLOD();shadowDirty=true;scheduleRender();});
+  map.on('move',()=>{shadowDirty=true;scheduleRender();});
+  map.on('load',()=>{
+    setupMapLayers();
+    mapReady=true;
+    resizeCanvas();applyLight();checkLOD();
+
+    document.getElementById('statusbar').textContent='Cargando tiles…';
+    scheduleViewportFetch();
+    shadowDirty=true;scheduleRender();
+  });
+  map.on('moveend',()=>{
+    const c=map.getCenter();MAP_LAT=c.lat;MAP_LON=c.lng;
+    fetchWeather(MAP_LAT,MAP_LON);
+    scheduleViewportFetch();
+    updateVisible();
+    if(mode==='3d')push3DBuildings();
+    shadowDirty=true;scheduleRender();
+  });
+}
+
+function setupMapLayers(){
+  for(const l of map.getStyle().layers){
+    if(l.type==='symbol'&&l.layout&&l.layout['text-field']){
+      try{map.setLayoutProperty(l.id,'text-field',['coalesce',['get','name:es'],['get','name_es'],['get','name'],['get','name:en']]);}catch(e){}
+    }
+    if((l.id||'').toLowerCase().includes('build')||(l['source-layer']||'').toLowerCase().includes('build')){
+      try{map.setLayoutProperty(l.id,'visibility','none');}catch(e){}
+    }
+  }
+  let beforeId;
+  for(const l of map.getStyle().layers){if(l.type==='symbol'){beforeId=l.id;break;}}
+
+  if(!map.getSource('madrid-3d')){
+    map.addSource('madrid-3d',{type:'geojson',data:{type:'FeatureCollection',features:[]},buffer:0,tolerance:0.3});
+  }
+  if(!map.getSource('madrid-shadows')){
+    map.addSource('madrid-shadows',{type:'geojson',data:{type:'FeatureCollection',features:[]},buffer:0,tolerance:0.5});
+  }
+  if(!map.getLayer('bld-3d')){
+    map.addLayer({
+      id:'bld-3d',type:'fill-extrusion',source:'madrid-3d',minzoom:LOD_ZOOM,
+      layout:{visibility:'none'},
+      paint:{
+        'fill-extrusion-color':['interpolate',['linear'],['get','h'],0,'#1e4030',6,'#245038',14,'#2d6a42',28,'#3a8a55',50,'#45a060'],
+        'fill-extrusion-height':['get','h'],
+        'fill-extrusion-base':0,'fill-extrusion-opacity':0.88
+      }
+    },beforeId);
+    map.on('click','bld-3d',e=>{
+      const f=e.features[0];if(!f)return;
+      const h=parseFloat(f.properties.h||0);
+      const p=sunPos(curMins,MAP_LAT,MAP_LON);
+      const sh=p.el>0?Math.round(Math.min(MAX_SHADOW_LENGTH,h/Math.tan(rd(Math.max(p.el,0.5))))):null;
+      const html=`<div class="h-popup"><strong>🏛 ${h.toFixed(1)} m</strong>
+        <div class="hp-row"><span>Sombra ahora</span><span>${sh!=null?sh+'m':'noche'}</span></div>
+        <div class="hp-src">✓ Ayto. Madrid · dic. 2025</div></div>`;
+      if(popup)popup.remove();
+      popup=new maplibregl.Popup({closeButton:true,maxWidth:'180px'}).setLngLat(e.lngLat).setHTML(html).addTo(map);
+    });
+    map.on('mouseenter','bld-3d',()=>map.getCanvas().style.cursor='pointer');
+    map.on('mouseleave','bld-3d',()=>map.getCanvas().style.cursor='');
+  }
+  if(!map.getLayer('bld-shadows')){
+    map.addLayer({
+      id:'bld-shadows',type:'fill',source:'madrid-shadows',
+      layout:{visibility:'none'},
+      paint:{'fill-color':'rgba(20,50,160,1)','fill-opacity':0.52}
+    },'bld-3d');
+  }
+}
+
+// ── TILES ────────────────────────────────────────────────────────────────────
+function snapTile(v){return Math.floor(v/TILE_DEG)*TILE_DEG;}
+function tileKey(tx,ty){return`${tx.toFixed(4)}_${ty.toFixed(4)}`;}
+function tilesForBBox(w,s,e,n){
+  const t=[];
+  for(let tx=snapTile(w);tx<e+TILE_DEG;tx=+(tx+TILE_DEG).toFixed(6))
+    for(let ty=snapTile(s);ty<n+TILE_DEG;ty=+(ty+TILE_DEG).toFixed(6))
+      t.push({tx,ty,key:tileKey(tx,ty)});
+  return t;
+}
+function scheduleViewportFetch(){clearTimeout(fetchTmr);fetchTmr=setTimeout(fetchViewport,400);}
+
+async function fetchViewport(){
+  if(!mapReady)return;
+  const zoom=map.getZoom();
+  if(zoom<14.5){
+    updateBadge('ok','Aleja el mapa para ver España — Acerca para ver edificios','');
+    visibleGroups=[];
+    if(map.getSource('madrid-3d'))map.getSource('madrid-3d').setData({type:'FeatureCollection',features:[]});
+    shadowDirty=true;scheduleRender();return;
+  }
+  const b=map.getBounds(),pad=MAX_SHADOW_LENGTH/111000;
+  const tiles=tilesForBBox(b.getWest()-pad,b.getSouth()-pad,b.getEast()+pad,b.getNorth()+pad)
+    .filter(t=>!tileStatus.has(t.key));
+  if(!tiles.length){updateVisible();return;}
+  tiles.forEach(t=>tileStatus.set(t.key,'loading'));
+  updateBadge('loading','Cargando datos…','');
+  const bs=IS_MOBILE?3:6;
+  for(let i=0;i<tiles.length;i+=bs){
+    const batch=tiles.slice(i,i+bs);
+    let anyNew=false;
+    await Promise.allSettled(batch.map(async t=>{
+      try{
+        const r=await fetch(`${DATA_BASE_URL}data/tiles/${t.key}.json`);
+        if(r.status===404){tileStatus.set(t.key,'empty');return;}
+        if(!r.ok)throw new Error(r.status);
+        tileCache.set(t.key,await r.json());
+        tileStatus.set(t.key,'done');anyNew=true;
+      }catch{tileStatus.set(t.key,'error');}
+    }));
+    if(anyNew){
+      updateVisible();
+      if(mode==='3d'&&mapReady){
+        try{map.setLayoutProperty('bld-3d','visibility','visible');}catch(e){}
+        push3DBuildings();
+      }
+      shadowDirty=true;scheduleRender();
+    }
+  }
+  const errs=[...tileStatus.values()].filter(v=>v==='error').length;
+  const total=[...tileCache.values()].reduce((s,d)=>s+d.length,0);
+  if(errs>0)updateBadge('err','Error al cargar datos de edificios','');
+  else if(total>0)updateBadge('ok','Ayto. Madrid — oficial dic. 2025',`${total} edificios`);
+}
+
+function updateVisible(){
+  if(!mapReady)return;
+  const b=map.getBounds(),pad=MAX_SHADOW_LENGTH/111000;
+  const vW=b.getWest()-pad,vE=b.getEast()+pad,vS=b.getSouth()-pad,vN=b.getNorth()+pad;
+  const groups=[];
+  for(const data of tileCache.values()){
+    for(const g of data){
+      const[fx,fy]=g.hull[0];
+      if(fx>=vW&&fx<=vE&&fy>=vS&&fy<=vN){groups.push(g);continue;}
+      for(const[x,y]of g.hull){if(x>=vW&&x<=vE&&y>=vS&&y<=vN){groups.push(g);break;}}
+    }
+  }
+  visibleGroups=groups;shadowDirty=true;
+}
+
+function push3DBuildings(){
+  if(!mapReady||!map.getSource('madrid-3d'))return;
+  const feats=[];
+  for(const g of visibleGroups){
+    for(const poly of (g.polys||[])){
+      if(!poly.ring||poly.ring.length<3)continue;
+      feats.push({type:'Feature',geometry:{type:'Polygon',coordinates:[poly.ring]},properties:{h:poly.h}});
+    }
+  }
+  try{map.getSource('madrid-3d').setData({type:'FeatureCollection',features:feats});}catch(e){}
+}
+
+function updateBadge(state,text,n){
+  document.getElementById('src-badge').className=state==='ok'?'ok':state==='err'?'err':'';
+  document.getElementById('sb-text').textContent=text;
+  document.getElementById('sb-n').textContent=n||'';
+}
+
+// ── MODE / CAMERA ────────────────────────────────────────────────────────────
+function setMode(m){
+  mode=m;
+  document.getElementById('btn2d').className='tb'+(m==='2d'?' on2d':'');
+  document.getElementById('btn3d').className='tb'+(m==='3d'?' on3d':'');
+  document.getElementById('compass').style.display=m==='3d'?'block':'none';
+  document.getElementById('camhint').style.display=m==='3d'?'block':'none';
+  const canvas=document.getElementById('shcanvas');
+  if(m==='3d'){
+    canvas.style.display='none';
+    map.easeTo({pitch:52,bearing:-18,zoom:Math.max(map.getZoom(),LOD_ZOOM),duration:600});
+    try{map.setLayoutProperty('bld-3d','visibility','visible');}catch(e){}
+    try{map.setLayoutProperty('bld-shadows','visibility','visible');}catch(e){}
+    push3DBuildings();
+  }else{
+    canvas.style.display='';
+    map.easeTo({pitch:0,bearing:0,duration:500});
+    try{map.setLayoutProperty('bld-3d','visibility','none');}catch(e){}
+    try{map.setLayoutProperty('bld-shadows','visibility','none');}catch(e){}
+    try{map.getSource('madrid-shadows').setData({type:'FeatureCollection',features:[]});}catch(e){}
+  }
+  checkLOD();shadowDirty=true;scheduleRender();
+}
+function resetCam(){
+  if(mode==='3d')map.easeTo({pitch:52,bearing:-18,zoom:16,duration:600});
+  else map.easeTo({pitch:0,bearing:0,zoom:15,duration:500});
+}
+function checkLOD(){
+  if(!mapReady)return;
+  document.getElementById('lodbar').style.display=(mode==='3d'&&map.getZoom()<LOD_ZOOM)?'block':'none';
+}
+
+// ── COMPASS ──────────────────────────────────────────────────────────────────
+function updateBearing(){
+  if(!map)return;
+  const b=map.getBearing(),r=rd(b),R=14,cx=25,cy=25;
+  const l=document.getElementById('bl');
+  l.setAttribute('x2',(cx+R*Math.sin(r)).toFixed(1));
+  l.setAttribute('y2',(cy-R*Math.cos(r)).toFixed(1));
+}
+function updateCompassDot(az,el){
+  const dot=document.getElementById('sdot'),ray=document.getElementById('sray');
+  if(el<=0){dot.setAttribute('opacity','0');ray.setAttribute('opacity','0');return;}
+  const R=14,cx=25,cy=25,a=rd(az-180);
+  dot.setAttribute('cx',(cx+R*Math.sin(a)).toFixed(1));
+  dot.setAttribute('cy',(cy-R*Math.cos(a)).toFixed(1));
+  dot.setAttribute('opacity','1');
+  ray.setAttribute('x2',(cx+R*Math.sin(a)).toFixed(1));
+  ray.setAttribute('y2',(cy-R*Math.cos(a)).toFixed(1));
+  ray.setAttribute('opacity','0.7');
+}
+
+// ── LIGHT ────────────────────────────────────────────────────────────────────
+function applyLight(){
+  if(!mapReady)return;
+  const p=sunPos(curMins,MAP_LAT,MAP_LON);
+  if(p.el>0){
+    const w=Math.min(1,(p.el-2)/35),i=Math.max(0.15,Math.min(0.90,p.el/90*0.90+0.15));
+    try{map.setLight({anchor:'map',color:`rgb(255,${Math.round(215+w*40)},${Math.round(160+w*60)})`,intensity:i,position:[1.5,p.az,Math.max(4,90-p.el)]});}catch(e){}
+  }else{
+    try{map.setLight({anchor:'map',color:'#8090c0',intensity:0.08,position:[1.5,0,90]});}catch(e){}
+  }
+  updateCompassDot(p.az,p.el);
+}
+
+// ── SOLAR MATH ───────────────────────────────────────────────────────────────
+function doy(d){return Math.floor((d-new Date(d.getFullYear(),0,0))/864e5);}
+function fmtH(h){h=((h%24)+24)%24;const hh=Math.floor(h),mm=Math.round((h-hh)*60);if(mm>=60)return String((hh+1)%24).padStart(2,'0')+':00';return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');}
+function fmtM(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+function makeDate(mins){return new Date(curDate.getFullYear(),curDate.getMonth(),curDate.getDate(),Math.floor(mins/60),mins%60,0,0);}
+function sunPos(mins,lat,lon){
+  const d=makeDate(mins),N=doy(d),hrUTC=d.getUTCHours()+d.getUTCMinutes()/60;
+  const B=rd(360/365*(N-81)),dclR=rd(23.45*Math.sin(B));
+  const eot=(9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B))/60;
+  const haR=rd(15*(hrUTC+lon/15+eot-12)),phiR=rd(lat);
+  const sinEl=Math.sin(phiR)*Math.sin(dclR)+Math.cos(phiR)*Math.cos(dclR)*Math.cos(haR);
+  const el=dg(Math.asin(Math.max(-1,Math.min(1,sinEl))));
+  let az=180;const cEl=Math.cos(rd(el));
+  if(cEl>1e-4){const ca=(Math.sin(dclR)-Math.sin(phiR)*sinEl)/(Math.cos(phiR)*cEl);az=dg(Math.acos(Math.max(-1,Math.min(1,ca))));if(haR>0)az=360-az;}
+  return{el,az};
+}
+function sunTimes(lat,lon){
+  const d=new Date(curDate),N=doy(d),B=rd(360/365*(N-81));
+  const dclR=rd(23.45*Math.sin(B));
+  const eot=(9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B))/60;
+  const cosH=-Math.tan(rd(lat))*Math.tan(dclR);
+  if(cosH<-1)return{sr:0,ss:24};if(cosH>1)return{sr:12,ss:12};
+  const H0=dg(Math.acos(cosH)),noonUTC=12-lon/15-eot,tzH=-d.getTimezoneOffset()/60;
+  return{sr:noonUTC-H0/15+tzH,ss:noonUTC+H0/15+tzH};
+}
+
+// ── DAY/NIGHT UI ─────────────────────────────────────────────────────────────
+function updateDayNightUI(){
+  const p=sunPos(curMins,MAP_LAT,MAP_LON),t=sunTimes(MAP_LAT,MAP_LON);
+  const isNight=p.el<=0,isTwi=p.el>0&&p.el<4;
+  document.getElementById('nightbanner').style.display=isNight?'block':'none';
+  document.getElementById('twibanner').style.display=isTwi?'block':'none';
+  document.getElementById('nb-sr').textContent=fmtH(t.sr);
+  document.getElementById('nb-ss').textContent=fmtH(t.ss);
+  document.getElementById('mapnight').style.display=isNight?'flex':'none';
+  document.getElementById('maptwi').style.display=isTwi?'block':'none';
+  if(isNight)document.getElementById('mn-sub').textContent=`Amanecer: ${fmtH(t.sr)} · Atardecer: ${fmtH(t.ss)}`;
+  return{p,t};
+}
+
+// ── WEATHER ──────────────────────────────────────────────────────────────────
+async function fetchWeather(lat,lon){
+  wLoaded=false;hCloud=[];hCode=[];hPrec=[];hUV=[];hTemp=[];wDates=[];dData={};
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${parseFloat(lat).toFixed(4)}&longitude=${parseFloat(lon).toFixed(4)}&hourly=cloud_cover,weather_code,precipitation,uv_index,temperature_2m&daily=weather_code,precipitation_sum,cloud_cover_mean,temperature_2m_max,temperature_2m_min&forecast_days=7&timezone=auto`;
+    const r=await fetch(url);
+    if(!r.ok)throw new Error(r.status);
+    const data=await r.json();
+    hCloud=data.hourly.cloud_cover;
+    hCode=data.hourly.weather_code;
+    hPrec=data.hourly.precipitation;
+    hUV=data.hourly.uv_index;
+    hTemp=data.hourly.temperature_2m;
+    wDates=data.hourly.time.map(t=>t.slice(0,10));
+    dData=data.daily;
+    wLoaded=true;
+    renderForecast();
+    updateWeatherUI();
+  }catch(e){
+    document.getElementById('wxdesc').textContent='No disponible';
+    console.warn('Weather fetch failed:',e);
+  }
+}
+
+function getCurCloud(){
+  if(!wLoaded)return null;
+  const ds=getLocalIsoDate(curDate),base=wDates.indexOf(ds);
+  return base>=0?(hCloud[base+Math.floor(curMins/60)]??null):null;
+}
+
+function updateWeatherUI(){
+  if(!wLoaded)return;
+  const ds=getLocalIsoDate(curDate);
+  const base=wDates.indexOf(ds);
+  if(base<0){
+    document.getElementById('uvnum').textContent='--';
+    document.getElementById('uvbadge').textContent='--';
+    document.getElementById('uvspf').textContent='';
+    document.getElementById('uvtip').textContent='Fuera de rango';
+    document.getElementById('wxtemp').textContent='--°';
+    document.getElementById('wxicon').textContent='📅';
+    document.getElementById('wxdesc').textContent='Datos no disponibles';
+    document.getElementById('wxsub').textContent='Selecciona un día en los próximos 7 días';
+    document.getElementById('wx-nubes').textContent='--%';
+    document.getElementById('wx-prec').textContent='-- mm';
+    updateWxBubble(null,null,null,null);
+    return;
+  }
+  const idx=base+Math.floor(curMins/60);
+  if(idx<0||idx>=hUV.length)return;
+  if(hUV[idx]!==undefined){
+    const uv=hUV[idx];
+    const ui=uvInfo(uv);
+    document.getElementById('uvnum').textContent=uv.toFixed(1);
+    document.getElementById('uvbadge').textContent=ui.lv;
+    document.getElementById('uvbadge').style.background=ui.bg;
+    document.getElementById('uvbadge').style.color=ui.bc;
+    document.getElementById('uvspf').textContent=ui.spf;
+    document.getElementById('uvcur').style.left=(ui.pct*100).toFixed(1)+'%';
+    document.getElementById('uvtip').textContent=ui.tip;
+  }
+  const code=hCode[idx]!==undefined?hCode[idx]:0;
+  const cld=hCloud[idx]!==undefined?hCloud[idx]:0;
+  const prc=hPrec[idx]!==undefined?hPrec[idx]:0;
+  const temp=hTemp[idx]!==undefined?hTemp[idx]:null;
+  const uv=hUV[idx]!==undefined?hUV[idx]:null;
+  if(temp!==null)document.getElementById('wxtemp').textContent=Math.round(temp)+'°';
+  else document.getElementById('wxtemp').textContent='--°';
+  document.getElementById('wxicon').textContent=wmoI[code]||'🌡';
+  document.getElementById('wxdesc').textContent=wmoD[code]||'—';
+  document.getElementById('wxsub').textContent=prc>0?'Precipitación detectada':`Cielo ${cld<20?'despejado':cld<50?'parcialmente nublado':'cubierto'}`;
+  document.getElementById('wx-nubes').textContent=cld+'%';
+  document.getElementById('wx-prec').textContent=prc.toFixed(1)+' mm';
+  updateWxBubble(wmoI[code],temp,cld,prc,uv);
+}
+
+function updateWxBubble(icon,temp,cld,prc,uv){
+  const bub=document.getElementById('wxbubble');
+  if(temp===null&&icon===null){bub.style.display='none';return;}
+  bub.style.display='flex';
+  document.getElementById('wxb-icon').textContent=icon||'--';
+  document.getElementById('wxb-temp').textContent=temp!==null?Math.round(temp)+'°':'--°';
+  const parts=[];
+  if(cld!==null)parts.push(`☁ ${Math.round(cld)}%`);
+  if(prc!==null&&prc>0)parts.push(`🌧 ${prc.toFixed(1)}mm`);
+  if(uv!==null)parts.push(`UV ${uv.toFixed(0)}`);
+  document.getElementById('wxb-mini').textContent=parts.join('  ');
+}
+
+const wmoD={0:'Despejado',1:'Casi despejado',2:'Parcialmente nublado',3:'Cubierto',45:'Niebla',48:'Niebla engelante',51:'Llovizna leve',53:'Llovizna',55:'Llovizna intensa',61:'Lluvia leve',63:'Lluvia',65:'Lluvia intensa',71:'Nevada leve',73:'Nevada',75:'Nevada intensa',80:'Chubascos',82:'Chubascos fuertes',95:'Tormenta',99:'Tormenta intensa'};
+const wmoI={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌧',55:'🌧',61:'🌦',63:'🌧',65:'🌧',71:'🌨',73:'🌨',75:'❄️',80:'🌦',82:'⛈',95:'⛈',99:'⛈'};
+
+function renderForecast(){
+  const el=document.getElementById('fcast');el.innerHTML='';
+  (dData.time||[]).forEach((dt,i)=>{
+    const code=dData.weather_code[i];
+    const d2=new Date(dt+'T12:00:00'),lbl=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d2.getDay()];
+    const tempMax=dData.temperature_2m_max&&dData.temperature_2m_max[i]!==undefined?`${dData.temperature_2m_max[i].toFixed(0)}°`:'--';
+    const tempMin=dData.temperature_2m_min&&dData.temperature_2m_min[i]!==undefined?`${dData.temperature_2m_min[i].toFixed(0)}°`:'--';
+    const row=document.createElement('div');row.className='frow';
+    row.innerHTML=`<span class="fi">${wmoI[code]||'🌡'}</span><span class="fn">${lbl}</span><span class="fd">${wmoD[code]||'—'}</span><span class="fc">${tempMin}/${tempMax}</span>`;
+    row.onclick=()=>{curDate=new Date(dt+'T00:00:00');document.getElementById('din').value=dt;update();fetchWeather(MAP_LAT,MAP_LON);};
+    el.appendChild(row);
+  });
+}
+
+function uvInfo(uv){
+  if(uv==null)return null;const pct=Math.min(uv/11,1);
+  if(uv<3)return{lv:'Bajo',bg:'rgba(29,158,117,.15)',bc:'#1D9E75',spf:'Sin riesgo',tip:'Sin riesgo solar significativo.',pct};
+  if(uv<6)return{lv:'Moderado',bg:'rgba(239,159,39,.15)',bc:'#EF9F27',spf:'SPF 30+',tip:'Protector recomendado 20 min antes de salir.',pct};
+  if(uv<8)return{lv:'Alto',bg:'rgba(216,90,48,.15)',bc:'#D85A30',spf:'SPF 50+',tip:'Evita el sol al mediodía. Busca sombra.',pct};
+  if(uv<11)return{lv:'Muy alto',bg:'rgba(226,75,74,.15)',bc:'#E24B4A',spf:'SPF 50+',tip:'Riesgo extremo. Camisa, gafas y sombrero.',pct};
+  return{lv:'Extremo',bg:'rgba(127,119,221,.15)',bc:'#7F77DD',spf:'SPF 50+',tip:'¡Peligro! No salgas sin protección total.',pct};
+}
+
+function drawStrip(){
+  const cv=document.getElementById('wsc');if(!cv)return;
+  const W=Math.max(cv.offsetWidth||220,220)*2;cv.width=W;
+  const ctx=cv.getContext('2d');ctx.clearRect(0,0,W,10);
+  const t=sunTimes(MAP_LAT,MAP_LON);
+  const nc=theme==='dark'?'rgba(10,15,40,.50)':'rgba(20,30,80,.09)';
+  const dc=theme==='dark'?'rgba(255,180,50,.06)':'rgba(255,200,70,.07)';
+  const srX=(Math.max(0,t.sr)/24)*W,ssX=(Math.min(24,t.ss)/24)*W;
+  ctx.fillStyle=nc;ctx.fillRect(0,0,srX,10);
+  ctx.fillStyle=dc;ctx.fillRect(srX,0,ssX-srX,10);
+  ctx.fillStyle=nc;ctx.fillRect(ssX,0,W-ssX,10);
+  if(wLoaded){
+    const ds=getLocalIsoDate(curDate),base=wDates.indexOf(ds);
+    for(let h=0;h<24;h++){
+      const c=base>=0?(hCloud[base+h]??50):50,cd=base>=0?(hCode[base+h]??0):0;
+      const x=(h/24)*W,w2=W/24;
+      const isR=[51,53,55,61,63,65,80,81,82,95,96,99].includes(cd);
+      ctx.fillStyle=isR?`rgba(60,100,220,${.35+c/100*.45})`:`rgba(${Math.round(180-c/100*60)},${Math.round(190-c/100*55)},${Math.round(220-c/100*50)},.30)`;
+      ctx.fillRect(x,0,w2,10);
+    }
+  }
+  const cx=(curMins/1440)*W;ctx.fillStyle='rgba(232,125,13,.95)';ctx.fillRect(cx-1.5,0,3,10);
+}
+
+// ── PANEL UPDATE ─────────────────────────────────────────────────────────────
+function updatePanel(){
+  const{p,t}=updateDayNightUI();
+  const timeStr=fmtM(curMins);
+  document.getElementById('tbig').textContent=timeStr;
+  document.getElementById('mob-timemini').textContent=timeStr;
+  document.getElementById('sunst').textContent=p.el>0?`Sol a ${p.el.toFixed(1)}° de elevación`:'Sol bajo el horizonte';
+  document.getElementById('staz').textContent=p.el>0?Math.round(p.az)+'°':'—';
+  document.getElementById('stel').textContent=p.el.toFixed(1)+'°';
+  document.getElementById('stsr').textContent=fmtH(t.sr);
+  document.getElementById('stss').textContent=fmtH(t.ss);
+  document.getElementById('srlbl').textContent=fmtH(t.sr);
+  document.getElementById('sslbl').textContent=fmtH(t.ss);
+  updateWeatherUI();
+  applyLight();drawStrip();shadowDirty=true;scheduleRender();
+}
+function update(){updatePanel();}
+
+// ── UI CONTROLS ──────────────────────────────────────────────────────────────
+// Tabs
+function showTab(name){
+  document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-btn-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// Panel toggle (desktop)
+let panelHidden=false;
+function togglePanel(){
+  panelHidden=!panelHidden;
+  document.getElementById('app').classList.toggle('panel-hidden',panelHidden);
+  document.getElementById('panel-toggle').textContent=panelHidden?'›':'‹';
+  setTimeout(()=>{resizeCanvas();shadowDirty=true;scheduleRender();},300);
+}
+
+// Mobile panel swipe
+let mobExpanded=false;
+function setMobilePanel(expand){
+  mobExpanded=expand;
+  document.getElementById('panel').classList.toggle('mob-collapsed',!expand);
+}
+function toggleMobilePanel(){setMobilePanel(!mobExpanded);}
+
+(()=>{
+  const handle=document.getElementById('mob-handle');
+  if(!handle)return;
+  let startY=0, startX=0, dragging=false;
+  const THRESHOLD=30; // px mínimos para contar como swipe
+
+  handle.addEventListener('touchstart',e=>{
+    // No interceptar si el toque es sobre el slider
+    if(e.target===document.getElementById('tsl-mob'))return;
+    startY=e.touches[0].clientY;
+    startX=e.touches[0].clientX;
+    dragging=true;
+  },{passive:true});
+
+  handle.addEventListener('touchmove',e=>{
+    if(!dragging)return;
+    // Evitar scroll del panel mientras se arrastra el handle
+    if(e.target!==document.getElementById('tsl-mob'))e.preventDefault();
+  },{passive:false});
+
+  handle.addEventListener('touchend',e=>{
+    if(!dragging)return;
+    dragging=false;
+    const dy=startY-e.changedTouches[0].clientY; // positivo = swipe up
+    const dx=Math.abs(startX-e.changedTouches[0].clientX);
+    if(Math.abs(dy)>THRESHOLD && Math.abs(dy)>dx){
+      setMobilePanel(dy>0); // swipe up → expand, swipe down → collapse
+    }
+  },{passive:true});
+
+  // Tap en la pastilla también abre/cierra
+  document.getElementById('mob-pill-row').addEventListener('click',toggleMobilePanel);
+})();
+
+// Search toggle
+let searchOpen=false;
+function toggleSearch(){
+  searchOpen=!searchOpen;
+  document.getElementById('search-overlay').style.display=searchOpen?'block':'none';
+  document.getElementById('search-btn').classList.toggle('onsearch',searchOpen);
+  if(searchOpen)setTimeout(()=>document.getElementById('srch').focus(),80);
+  else{document.getElementById('sres').style.display='none';}
+}
+
+// ── SLIDERS (main + mobile mini) ─────────────────────────────────────────────
+document.getElementById('tsl').addEventListener('input',function(){
+  curMins=+this.value;
+  document.getElementById('tsl-mob').value=this.value;
+  update();
+});
+document.getElementById('tsl-mob').addEventListener('input',function(){
+  curMins=+this.value;
+  document.getElementById('tsl').value=this.value;
+  document.getElementById('mob-timemini').textContent=fmtM(curMins);
+  update();
+});
+document.getElementById('din').addEventListener('change',function(){
+  curDate=new Date(this.value+'T00:00:00');update();fetchWeather(MAP_LAT,MAP_LON);
+});
+
+// ── SEARCH ───────────────────────────────────────────────────────────────────
+let stmr;
+document.getElementById('srch').addEventListener('input',function(){
+  clearTimeout(stmr);const q=this.value.trim();
+  if(q.length<2){document.getElementById('sres').style.display='none';return;}
+  stmr=setTimeout(async()=>{
+    try{
+      const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+', Madrid')}&format=json&limit=5&bounded=1&viewbox=-3.888,40.644,-3.518,40.310`);
+      const data=await r.json();
+      const box=document.getElementById('sres');box.innerHTML='';box.style.display='block';
+      if(!data.length){box.innerHTML=`<div class="sresrow" style="color:var(--dim)">Sin resultados</div>`;return;}
+      data.forEach(item=>{
+        const d=document.createElement('div');d.className='sresrow';
+        d.textContent=item.display_name.split(',').slice(0,3).join(', ');
+        d.onclick=()=>{
+          MAP_LAT=parseFloat(item.lat);MAP_LON=parseFloat(item.lon);
+          map.flyTo({center:[MAP_LON,MAP_LAT],zoom:16,pitch:mode==='3d'?52:0,bearing:mode==='3d'?-18:0,duration:1400,essential:true});
+          box.style.display='none';document.getElementById('srch').value='';
+          toggleSearch();
+          fetchWeather(MAP_LAT,MAP_LON);
+        };box.appendChild(d);
+      });
+    }catch(e){}
+  },300);
+});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#search-overlay')&&!e.target.closest('#search-btn')){
+    if(searchOpen)toggleSearch();
+  }
+});
+
+// ── GEOLOCATION ──────────────────────────────────────────────────────────────
+let geoWatchId=null;
+function requestLocation(){
+  if(!("geolocation" in navigator)){
+    alert("Tu navegador no soporta geolocalización.");
+    return;
+  }
+  // Cancelar watch previo si lo hubiera
+  if(geoWatchId!==null){navigator.geolocation.clearWatch(geoWatchId);geoWatchId=null;}
+
+  const btn=document.getElementById('loc-btn');
+  const toast=document.getElementById('geo-toast');
+  const toastTxt=toast.querySelector('.gt-txt');
+
+  function setToast(state,msg){
+    toast.className=state?'show '+state:'show';
+    toastTxt.textContent=msg;
+  }
+  function hideToast(delay=3000){setTimeout(()=>{toast.className='';},delay);}
+
+  btn.classList.remove('locok','locerr');
+  btn.classList.add('locating');
+  btn.title='Obteniendo ubicación…';
+  setToast('locating','Buscando tu ubicación…');
+
+  let bestAccuracy=Infinity;
+  let settled=false;
+
+  const onPos=pos=>{
+    const{longitude:lon,latitude:lat,accuracy}=pos.coords;
+    if(lon>-19&&lon<5&&lat>27&&lat<44&&accuracy<bestAccuracy){
+      bestAccuracy=accuracy;
+      MAP_LAT=lat; MAP_LON=lon;
+      map.flyTo({center:[lon,lat],zoom:16,duration:900});
+      fetchWeather(lat,lon);
+      updatePanel();
+      btn.classList.remove('locating','locerr');
+      btn.classList.add('locok');
+      const acc=accuracy<10?'<10 m':accuracy<50?`~${Math.round(accuracy)} m`:`~${Math.round(accuracy/100)*100} m`;
+      btn.title=`Ubicación obtenida (±${acc})`;
+      setToast('locok',`Ubicación obtenida · ±${acc}`);
+      if(accuracy<50&&!settled){
+        settled=true;
+        navigator.geolocation.clearWatch(geoWatchId);
+        geoWatchId=null;
+        hideToast(2500);
+      }
+    }
+  };
+
+  const onErr=err=>{
+    btn.classList.remove('locating','locok');
+    btn.classList.add('locerr');
+    const msgs={1:'Permiso denegado',2:'Posición no disponible',3:'Tiempo de espera agotado'};
+    const msg=msgs[err.code]||'Error de geolocalización';
+    btn.title=msg;
+    setToast('locerr','📍 '+msg);
+    hideToast(4000);
+    if(geoWatchId!==null){navigator.geolocation.clearWatch(geoWatchId);geoWatchId=null;}
+  };
+
+  geoWatchId=navigator.geolocation.watchPosition(onPos, onErr,
+    {enableHighAccuracy:true, timeout:15000, maximumAge:0}
+  );
+
+  // Cortar tras 25 s si no se logró precisión buena
+  setTimeout(()=>{
+    if(geoWatchId!==null){
+      navigator.geolocation.clearWatch(geoWatchId);
+      geoWatchId=null;
+      if(!settled){
+        btn.classList.remove('locating');
+        if(bestAccuracy<Infinity){
+          btn.classList.add('locok');
+          btn.title=`Mejor precisión obtenida: ±${Math.round(bestAccuracy)} m`;
+          setToast('locok',`Mejor ubicación: ±${Math.round(bestAccuracy)} m`);
+        } else {
+          btn.classList.add('locerr');
+          btn.title='No se pudo obtener la ubicación';
+          setToast('locerr','No se pudo obtener la ubicación');
+        }
+        hideToast(3000);
+      }
+    }
+  },25000);
+}
+
+// ── BOOT ─────────────────────────────────────────────────────────────────────
+function initTime(){
+  const now=new Date();
+  curDate=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  curMins=now.getHours()*60+now.getMinutes();
+  document.getElementById('tsl').value=curMins;
+  document.getElementById('tsl-mob').value=curMins;
+  document.getElementById('din').value=getLocalIsoDate(now);
+}
+
+document.documentElement.setAttribute('data-theme',theme);
+document.getElementById('theme-btn').textContent=theme==='dark'?'☀️':'🌙';
+
+// On mobile, start collapsed
+if(IS_MOBILE){
+  document.getElementById('panel').classList.add('mob-collapsed');
+}
+
+initTime();initMap();fetchWeather(CENTER[0],CENTER[1]);updatePanel();
+</script>
+</body>
+</html>
